@@ -11,8 +11,8 @@ Cada cadeira junta o que ensinam o **IST, FEUP, UMinho, Universidade Aberta, MIT
 ## O que tem
 
 - **Trilho guiado.** O botão *Continuar* e o painel *O teu próximo passo* levam-te sempre à lição seguinte. O curso está dividido em fases (seis semestres e uma fase avançada) e cada cadeira mostra o seu estado: concluída, em curso, pronta a começar ou à espera de pré-requisitos.
-- **O curso como uma placa de circuito em 3D.** Cada cadeira é um chip que se ergue da placa, os tópicos são os componentes à volta dele e os pré-requisitos são as pistas de cobre. O que já dominas acende cor de fogo e envia impulsos pelas pistas. Dá para rodar, aproximar, deslizar e abrir qualquer chip. O motor 3D é próprio (Canvas 2D, sem bibliotecas) e tem versão estática para quem reduz o movimento.
-- **Lições completas.** Explicação, exemplos de código, erros comuns e exercícios com a solução escondida até a abrires. Já escritas: *Ferramentas do Programador* (terminal, shell, editores, Git, GitHub, SSH, depuração, Markdown e LaTeX), *Introdução à Programação* (de variáveis a recursão, tipos abstratos, testes e complexidade), *Lógica* (de tabelas de verdade a Prolog, SAT e completude) *Cálculo* (limites, derivadas, integrais, séries de Taylor, várias variáveis, descida do gradiente e equações diferenciais) e *Álgebra Linear* (de vetores e eliminação de Gauss a valores próprios, mínimos quadrados e SVD).
+- **O curso como uma placa de circuito em 3D.** Cada cadeira é um chip que se ergue da placa, os tópicos são os componentes à volta dele e os pré-requisitos são as pistas de cobre. O que já dominas acende cor de fogo e envia impulsos pelas pistas. Dá para rodar, aproximar, deslizar e abrir qualquer chip. É feita em WebGL com Three.js, abre com uma sequência cinematográfica na página inicial e tem versões alternativas: uma placa em Canvas 2D para browsers sem WebGL e uma versão estática para quem reduz o movimento.
+- **Lições completas.** Explicação, exemplos de código, erros comuns e exercícios com a solução escondida até a abrires. Já escritas: *Ferramentas do Programador* (terminal, shell, editores, Git, GitHub, SSH, depuração, Markdown e LaTeX), *Introdução à Programação* (de variáveis a recursão, tipos abstratos, testes e complexidade), *Lógica* (de tabelas de verdade a Prolog, SAT e completude) *Cálculo* (limites, derivadas, integrais, séries de Taylor, várias variáveis, descida do gradiente e equações diferenciais), *Álgebra Linear* (de vetores e eliminação de Gauss a valores próprios, mínimos quadrados e SVD) e *Ética e Profissão* (códigos de ética, RGPD, licenças, enviesamento, acessibilidade e comunicação técnica). O 1.º semestre do 1.º ano está completo.
 - **35 cadeiras, 292 tópicos e 112 tarefas práticas**, do 1.º ano ao mestrado.
 - **Programas e linguagens** usados em cada cadeira, e **livros e cursos gratuitos e legais** (MIT OpenCourseWare, CS50, OSTEP, Crafting Interpreters, …).
 - **Equivalências entre universidades**: em cada cadeira, a cadeira correspondente em cada universidade, com ligação ao plano de estudos.
@@ -33,7 +33,7 @@ Cada cadeira junta o que ensinam o **IST, FEUP, UMinho, Universidade Aberta, MIT
 
     python3 -m http.server 8000      # depois abre http://localhost:8000
 
-Não há dependências nem passo de compilação: é HTML, CSS e JavaScript simples.
+Não há passo de compilação: é HTML, CSS e JavaScript simples. A única dependência externa é o Three.js, carregado de uma CDN.
 
 ## Escrever lições
 
@@ -49,7 +49,8 @@ que gera `js/lessons.js`.
     style.css             todo o design
     js/data*.js           as 35 cadeiras: tópicos, tarefas, programas, livros e equivalências
     js/lessons.js         lições (gerado a partir de conteudo/)
-    js/placa.js           a placa de circuito em 3D (motor próprio em Canvas 2D)
+    js/placa3d.js         a placa de circuito em WebGL (Three.js, carregado do jsDelivr)
+    js/placa.js           a mesma placa em Canvas 2D, usada quando não há WebGL
     js/app.js             trilho, páginas, progresso e pesquisa
     conteudo/             lições em Markdown
     docs/                 capturas de ecrã deste README
