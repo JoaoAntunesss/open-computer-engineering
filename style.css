@@ -460,3 +460,18 @@ table.unis code { font: 500 13.5px var(--mono); color: var(--cold); margin-right
 
 /* the full-bleed hero uses 100vw; clip so the scrollbar width never causes sideways scroll */
 html, body { overflow-x: clip; }
+
+/* ---------- 3D circuit board ---------- */
+.placa-canvas { display: block; touch-action: none; cursor: grab; outline: none; }
+.placa-canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--fire); }
+.hero-canvas .placa-canvas { cursor: default; touch-action: auto; }
+.net { background: radial-gradient(90% 80% at 50% 40%, #0d1736 0%, var(--night) 75%); }
+
+/* cards that lean towards the pointer (set by JS); they settle back with ease-out */
+.tilt { transition: transform 450ms var(--ease-out); transform-style: preserve-3d; will-change: transform; }
+.tilt.tilting { transition: transform 120ms ease; }
+.die { box-shadow: inset 0 0 0 2px var(--cold), 0 18px 0 -10px #0b1430, 0 30px 40px -24px rgba(58, 150, 255, .35); }
+
+/* route changes get a little depth: the new page settles in from slightly behind */
+@keyframes vt-in { from { opacity: 0; transform: perspective(1400px) translateZ(-40px) translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .tilt { transition: none; } }
