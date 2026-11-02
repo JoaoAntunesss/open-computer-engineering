@@ -475,3 +475,49 @@ html, body { overflow-x: clip; }
 /* route changes get a little depth: the new page settles in from slightly behind */
 @keyframes vt-in { from { opacity: 0; transform: perspective(1400px) translateZ(-40px) translateY(10px); } }
 @media (prefers-reduced-motion: reduce) { .tilt { transition: none; } }
+
+/* ================= WebGL board, cinematic intro and scroll motion ================= */
+.placa-gl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-net .hero-canvas::after { content: ""; position: absolute; inset: auto 0 0; height: 38%; background: linear-gradient(transparent, var(--night)); pointer-events: none; }
+
+/* intro: letterbox bars, hidden chrome, words that rise one by one */
+.intro-playing .top, .intro-playing .hero-net ~ * { opacity: 0; pointer-events: none; }
+.top, .hero-net ~ * { transition: opacity 900ms var(--ease-out); }
+.letterbox { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.letterbox i { position: absolute; left: 0; right: 0; height: 11vh; background: #000; transition: transform 1100ms var(--ease-io); }
+.letterbox i:first-child { top: 0; } .letterbox i:last-child { bottom: 0; }
+.intro-text .letterbox i:first-child, .intro-done .letterbox i:first-child { transform: translateY(-100%); }
+.intro-text .letterbox i:last-child, .intro-done .letterbox i:last-child { transform: translateY(100%); }
+.intro-skip { position: absolute; right: var(--m); bottom: calc(11vh + 18px); z-index: 4; font: 500 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); background: rgba(4, 6, 13, .55); border: 1px solid var(--line2); padding: 9px 14px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(8px); transition: color 200ms, border-color 200ms, opacity 400ms; }
+.intro-skip:hover { color: var(--ink); border-color: var(--fire); }
+.intro-text .intro-skip, .intro-done .intro-skip { opacity: 0; pointer-events: none; }
+.hero-net.intro .hero-copy .lead { opacity: 0; transform: translateY(16px); }
+.hero-net.intro-text .hero-copy .lead, .hero-net.intro-done .hero-copy .lead { opacity: 1; transform: none; transition: opacity 900ms 650ms var(--ease-out), transform 900ms 650ms var(--ease-out); }
+.hero-copy h1 .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .06em; }
+.hero-copy h1 .w > span { display: inline-block; }
+.hero-net.intro .hero-copy h1 .w > span { transform: translateY(110%); }
+.hero-net.intro-text .hero-copy h1 .w > span, .hero-net.intro-done .hero-copy h1 .w > span { transform: none; transition: transform 1000ms calc(var(--k) * 90ms) var(--ease-out); }
+.hero-net.intro::before { content: ""; position: absolute; inset: 0; z-index: 2; background: #000; pointer-events: none; animation: veil 1400ms 200ms var(--ease-out) forwards; }
+@keyframes veil { to { opacity: 0; } }
+
+/* chip tooltip */
+.rede-tip { z-index: 5; border: 1px solid var(--line2); border-radius: 10px; backdrop-filter: blur(10px); background: rgba(16, 23, 43, .88); transition: opacity 150ms; }
+
+/* scroll-driven reveals (browsers with scroll timelines; others show everything) */
+@supports (animation-timeline: view()) {
+  .js .phase, .js .stats > *, .js .steps > *, .js .row, .js .panel { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% cover 22%; }
+}
+@keyframes reveal { from { opacity: 0; transform: translateY(28px) scale(.985); filter: blur(4px); } }
+
+/* micro-interactions */
+.btn-fire { transition: transform 180ms var(--ease-out), box-shadow 250ms var(--ease-out), background 200ms; }
+.btn-fire:hover { transform: translateY(-1px); box-shadow: 0 10px 30px -8px rgba(255, 128, 48, .65); }
+.btn-fire:active { transform: translateY(0) scale(.98); }
+.step a, .row { transition: background 200ms, transform 220ms var(--ease-out); }
+.step a:hover { transform: translateX(4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .letterbox, .intro-skip { display: none; }
+  .js .phase, .js .stats > *, .js .steps > *, .js .row, .js .panel { animation: none; }
+}
+@media (min-width: 900px) { .hero-net .hero-canvas::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(4, 6, 13, .85) 0%, rgba(4, 6, 13, .35) 38%, transparent 60%); pointer-events: none; } }

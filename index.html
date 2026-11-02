@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
 </head>
 <body>
 <script>document.documentElement.classList.replace("js-off","js")</script>
@@ -36,7 +37,12 @@
 <script src="js/data3.js"></script>
 <script src="js/data4.js"></script>
 <script src="js/lessons.js"></script>
-<script src="js/placa.js"></script>
 <script src="js/app.js"></script>
+<script type="module">
+const gl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+const classic = () => new Promise(r => { const s = document.createElement('script'); s.src = 'js/placa.js'; s.onload = s.onerror = r; document.head.appendChild(s); });
+try { if (!gl) throw 0; await import('./js/placa3d.js'); } catch (e) { await classic(); }
+window.dispatchEvent(new Event('placa-ready'));
+</script>
 </body>
 </html>
