@@ -21,7 +21,7 @@ Cada cadeira junta o que ensinam o **IST, FEUP, UMinho, Universidade Aberta, MIT
 
 <p align="center"><img src="docs/proximo-passo.jpg" width="49%" alt="O teu próximo passo"> <img src="docs/trilho.jpg" width="49%" alt="O trilho por fases"></p>
 <p align="center"><img src="docs/rede.jpg" width="49%" alt="Rede neural do curso"> <img src="docs/licao.jpg" width="49%" alt="Uma lição com a lista de tópicos da cadeira"></p>
-<p align="center"><img src="docs/cadeira.jpg" width="49%" alt="Página de uma cadeira: pré-requisitos, tópicos e equivalências"> <img src="docs/telemovel-inicio.jpg" width="23%" alt="Início no telemóvel"> <img src="docs/telemovel-trilho.jpg" width="23%" alt="Trilho no telemóvel"></p>
+<p align="center"><img src="docs/cadeira.jpg" width="49%" alt="Página de uma cadeira: pré-requisitos e o que vem a seguir"></p>
 
 ## Publicar no GitHub Pages
 
