@@ -17,18 +17,18 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 let L = store.get('eia.lang', (navigator.language || 'pt').slice(0, 2) === 'pt' ? 'pt' : 'en');
 const T = {
   pt: {
-    brand: 'Engenharia Informática Aberta', home: 'Trilho', net: 'Rede', cat: 'Cadeiras', map: 'Mapa', about: 'Sobre',
+    brand: 'Engenharia Informática Aberta', home: 'Trilho', net: 'Circuito', cat: 'Cadeiras', map: 'Mapa', about: 'Sobre',
     cont: 'Continuar', start: 'Começar', homeT: 'Do transístor à inteligência artificial.', homeP: 'Uma licenciatura completa em Engenharia Informática, com lições, exercícios e um trilho que te diz sempre o que fazer a seguir. Juntámos o que ensinam o IST, a FEUP, a UMinho, a UAb, o MIT, Harvard, Oxford, Stanford, CMU e Berkeley.',
     stepT: 'O teu próximo passo', nextLesson: (n, m) => `Lição ${n} de ${m}`, nextTask: (n, m) => `Tarefa ${n} de ${m}`, minutes: n => `${n} min de leitura`, noLesson: 'Lição em preparação, com recursos para estudar',
     after: 'Depois disto', allDone: 'Concluíste o curso inteiro. Agora é escolher uma área e ir mais fundo.',
-    howT: 'Como se usa', how: ['Segue o trilho pela ordem. Cada cadeira assenta nas anteriores, como num curso a sério.', 'Em cada tópico há uma lição com exemplos e exercícios resolvidos. Quando o dominares, marca-o.', 'A tua rede neural acende à medida que aprendes, e o botão Continuar leva-te sempre ao passo seguinte.'],
+    howT: 'Como se usa', how: ['Segue o trilho pela ordem. Cada cadeira assenta nas anteriores, como num curso a sério.', 'Em cada tópico há uma lição com exemplos e exercícios resolvidos. Quando o dominares, marca-o.', 'O teu circuito acende à medida que aprendes, e o botão Continuar leva-te sempre ao passo seguinte.'],
     trailT: 'O trilho', trailP: 'Seis semestres e uma fase avançada, pela ordem em que se aprendem.', phaseDone: (a, b) => `${a} de ${b} cadeiras concluídas`, showPhase: 'Ver cadeiras', hidePhase: 'Esconder',
     st: { done: 'Concluída', doing: 'Em curso', ready: 'Pronta a começar', wait: 'Depois de' }, youAreHere: 'Estás aqui',
     statT: 'Onde estás', statTopics: 'tópicos dominados', statCourses: 'cadeiras concluídas', statPhase: 'fase atual',
     lessonsIn: 'Nesta cadeira', tasksLink: 'Tarefas práticas da cadeira', mastered: 'Dominei, seguinte', skip: 'Ainda não, seguinte', masteredLast: 'Dominei, voltar à cadeira', reading: 'Progresso de leitura',
-    catT2: 'Todas as cadeiras', catP2: 'O catálogo completo, para procurar por tema, linguagem ou programa.', boardLink: 'Ver o curso como circuito',
+    catT2: 'Todas as cadeiras', catP2: 'O catálogo completo, para procurar por tema, linguagem ou programa.', boardLink: 'Ver o curso em 3D',
     closeT: 'Engenharia Informática Aberta',
-    netT: 'A tua rede neural', netP: 'Cada cadeira é um neurónio e os tópicos são as suas dendrites. As sinapses ligam-na às cadeiras de que depende. O que já dominas acende a laranja e envia impulsos para o que vem a seguir.', netHint: 'Arrasta para mover, usa a roda ou dois dedos para aproximar, e toca num neurónio para o abrir.', zin: 'Aproximar', zout: 'Afastar', zfit: 'Ver tudo', legHot: 'Dominado', legCold: 'Por aprender', legSyn: 'Pré-requisito', legDen: 'Tópico', openLesson: 'Abrir a lição',
+    netT: 'O teu circuito', netP: 'Cada cadeira é um chip e os tópicos são os componentes à volta dele. As pistas de cobre ligam-no às cadeiras de que depende. O que já dominas acende cor de fogo e envia impulsos para o que vem a seguir.', netHint: 'Arrasta para rodar a placa, usa a roda ou dois dedos para aproximar e Shift ou o botão direito para deslizar. Toca num chip para o abrir.', zin: 'Aproximar', zout: 'Afastar', zfit: 'Ver tudo', legHot: 'Dominado', legCold: 'Por aprender', legSyn: 'Pista: pré-requisito', legDen: 'Componente: tópico', openLesson: 'Abrir a lição',
     heroT: 'Do transístor à inteligência artificial.',
     heroP: 'Uma licenciatura completa em Engenharia Informática, cadeira a cadeira. Cada uma junta o que ensinam o IST, a FEUP, a UMinho, a UAb, o MIT, Harvard, Oxford, Stanford, CMU e Berkeley, com tarefas práticas, os programas que vais usar e livros gratuitos.',
     meterP: 'O teu progresso', items: (a, b) => `${a} de ${b} tópicos e tarefas`,
@@ -44,25 +44,25 @@ const T = {
     pinIn: 'Precisas antes', pinOut: 'Abre caminho para', noIn: 'Nada: podes começar já', noOut: 'Fim deste ramo',
     prev: 'Cadeira anterior', nextC: 'Cadeira seguinte',
     mapT: 'Mapa do curso', mapP: 'As colunas são semestres. Escolhe um chip para veres tudo o que a cadeira tem e o caminho que leva até ela.',
-    pick: 'Escolhe um chip no mapa para veres aqui os conteúdos da cadeira.', pickNet: 'Toca num neurónio para veres aqui os tópicos, as tarefas e os livros da cadeira.', openCourse: 'Abrir a página da cadeira',
+    pick: 'Escolhe um chip no mapa para veres aqui os conteúdos da cadeira.', pickNet: 'Toca num chip para veres aqui os tópicos, as tarefas e os livros da cadeira.', openCourse: 'Abrir a página da cadeira',
     lesson: 'Lição', lessonSoon: 'A lição deste tópico ainda está a ser escrita. Entretanto, estes recursos cobrem-no:', learned: 'Já domino este tópico', backCourse: 'Voltar à cadeira', prevT: 'Tópico anterior', nextT: 'Tópico seguinte',
     aboutT: 'Sobre este site', progress: 'O teu progresso', progressP: 'O progresso fica guardado só neste browser. Podes exportá-lo para um ficheiro e importá-lo noutro computador.',
     export: 'Exportar progresso', import: 'Importar progresso', reset: 'Apagar progresso', resetQ: 'Apagar todo o progresso?', imported: 'Progresso importado', exported: 'Progresso exportado', bad: 'Este ficheiro não é um progresso exportado deste site.',
     method: 'Como foi feito', sources: 'Fontes dos planos de estudos', foot: 'Projeto aberto. Os livros e cursos ligados pertencem aos seus autores; este site organiza-os e liga-os.', notFound: 'Esta cadeira não existe.', back: 'Ver todas as cadeiras', sem: 'Semestre', area: 'Área', done2: 'concluído'
   },
   en: {
-    brand: 'Open Computer Engineering', home: 'Path', net: 'Network', cat: 'Courses', map: 'Map', about: 'About',
+    brand: 'Open Computer Engineering', home: 'Path', net: 'Circuit', cat: 'Courses', map: 'Map', about: 'About',
     cont: 'Continue', start: 'Start', homeT: 'From transistor to artificial intelligence.', homeP: 'A complete computer science and engineering degree, with lessons, exercises and a path that always tells you what to do next. It brings together what IST, FEUP, UMinho, UAb, MIT, Harvard, Oxford, Stanford, CMU and Berkeley teach.',
     stepT: 'Your next step', nextLesson: (n, m) => `Lesson ${n} of ${m}`, nextTask: (n, m) => `Task ${n} of ${m}`, minutes: n => `${n} min read`, noLesson: 'Lesson in preparation, with resources to study',
     after: 'After this', allDone: 'You finished the whole degree. Now pick an area and go deeper.',
-    howT: 'How it works', how: ['Follow the path in order. Each course builds on the earlier ones, like a real degree.', 'Every topic has a lesson with examples and solved exercises. Tick it when you have mastered it.', 'Your neural network lights up as you learn, and the Continue button always takes you to the next step.'],
+    howT: 'How it works', how: ['Follow the path in order. Each course builds on the earlier ones, like a real degree.', 'Every topic has a lesson with examples and solved exercises. Tick it when you have mastered it.', 'Your circuit lights up as you learn, and the Continue button always takes you to the next step.'],
     trailT: 'The path', trailP: 'Six semesters and an advanced stage, in the order they are learned.', phaseDone: (a, b) => `${a} of ${b} courses completed`, showPhase: 'Show courses', hidePhase: 'Hide',
     st: { done: 'Completed', doing: 'In progress', ready: 'Ready to start', wait: 'After' }, youAreHere: 'You are here',
     statT: 'Where you are', statTopics: 'topics mastered', statCourses: 'courses completed', statPhase: 'current stage',
     lessonsIn: 'In this course', tasksLink: 'Hands-on tasks for this course', mastered: 'Mastered, next', skip: 'Not yet, next', masteredLast: 'Mastered, back to the course', reading: 'Reading progress',
-    catT2: 'All courses', catP2: 'The full catalogue, to search by topic, language or tool.', boardLink: 'See the degree as a circuit',
+    catT2: 'All courses', catP2: 'The full catalogue, to search by topic, language or tool.', boardLink: 'See the degree in 3D',
     closeT: 'Open Computer Engineering',
-    netT: 'Your neural network', netP: 'Each course is a neuron and its topics are dendrites. Synapses connect it to the courses it depends on. What you have mastered lights up orange and sends impulses to what comes next.', netHint: 'Drag to move, scroll or pinch to zoom, and tap a neuron to open it.', zin: 'Zoom in', zout: 'Zoom out', zfit: 'Show all', legHot: 'Mastered', legCold: 'To learn', legSyn: 'Prerequisite', legDen: 'Topic', openLesson: 'Open the lesson',
+    netT: 'Your circuit', netP: 'Each course is a chip and its topics are the components around it. Copper traces connect it to the courses it depends on. What you have mastered lights up like fire and sends pulses to what comes next.', netHint: 'Drag to rotate the board, scroll or pinch to zoom, and use Shift or right-drag to pan. Tap a chip to open it.', zin: 'Zoom in', zout: 'Zoom out', zfit: 'Show all', legHot: 'Mastered', legCold: 'To learn', legSyn: 'Trace: prerequisite', legDen: 'Component: topic', openLesson: 'Open the lesson',
     heroT: 'From transistor to artificial intelligence.',
     heroP: 'A complete computer science and engineering degree, course by course. Each one brings together what IST, FEUP, UMinho, UAb, MIT, Harvard, Oxford, Stanford, CMU and Berkeley teach, with hands-on tasks, the tools you will use and free books.',
     meterP: 'Your progress', items: (a, b) => `${a} of ${b} topics and tasks`,
@@ -78,7 +78,7 @@ const T = {
     pinIn: 'You need first', pinOut: 'Leads to', noIn: 'Nothing: start now', noOut: 'End of this branch',
     prev: 'Previous course', nextC: 'Next course',
     mapT: 'Degree map', mapP: 'Columns are semesters. Pick a chip to see everything the course contains and the path that leads to it.',
-    pick: 'Pick a chip on the map to see the course contents here.', pickNet: 'Tap a neuron to see the course topics, tasks and books here.', openCourse: 'Open the course page',
+    pick: 'Pick a chip on the map to see the course contents here.', pickNet: 'Tap a chip to see the course topics, tasks and books here.', openCourse: 'Open the course page',
     lesson: 'Lesson', lessonSoon: 'The lesson for this topic is still being written. Meanwhile, these resources cover it:', learned: 'I know this topic', backCourse: 'Back to the course', prevT: 'Previous topic', nextT: 'Next topic',
     aboutT: 'About this site', progress: 'Your progress', progressP: 'Progress is saved in this browser only. You can export it to a file and import it on another computer.',
     export: 'Export progress', import: 'Import progress', reset: 'Delete progress', resetQ: 'Delete all progress?', imported: 'Progress imported', exported: 'Progress exported', bad: 'This file is not a progress export from this site.',
@@ -226,7 +226,7 @@ function nextPanel() {
   const mins = isT ? readMin(c.id, ns.j) : 0, fresh = totals()[0] === 0;
   const meta = [isT ? t('nextLesson')(ns.j + 1, c.topics.length) : t('nextTask')(ns.j + 1, c.tasks.length), mins ? t('minutes')(mins) : (isT ? t('noLesson') : '')].filter(Boolean);
   const after = upcoming(3).map(u => `<li><a href="#/l/${u.c.id}/${u.j + 1}"><span>${esc(half(u.c.topics[u.j]))}</span><small>${esc(nm(u.c))}</small></a></li>`).join('');
-  return `<section class="next rise" aria-labelledby="nxt"><div class="next-main"><h2 id="nxt">${t('stepT')}</h2>
+  return `<section class="next rise tilt" aria-labelledby="nxt"><div class="next-main"><h2 id="nxt">${t('stepT')}</h2>
       <p class="next-course"><a href="#/c/${c.id}">${esc(nm(c))}</a></p><p class="next-title">${esc(title)}</p>
       <p class="next-meta">${meta.map(esc).join('<span class="sep"></span>')}</p>
       <a class="btn-fire" href="${ns.href}">${fresh ? t('start') : t('cont')}</a>
@@ -268,7 +268,7 @@ function bindHome() {
     list.hidden = !open; b.setAttribute('aria-expanded', open); b.textContent = open ? t('hidePhase') : t('showPhase');
     openPhases = open ? [...new Set(openPhases.concat(id))] : openPhases.filter(x => x !== id); store.set('eia.open', openPhases);
   });
-  NET = window.Rede.mount($('#heroNet'), { ambient: true, courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: doneTopic, name: nm, topicName: (c, j) => half(c.topics[j]), esc, reduced: REDUCED.matches, label: t('netT') });
+  NET = window.Placa.mount($('#heroNet'), { ambient: true, lang: L, courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: doneTopic, name: nm, topicName: (c, j) => half(c.topics[j]), esc, reduced: REDUCED.matches, label: t('netT') });
 }
 
 /* ---------- home ---------- */
@@ -279,7 +279,7 @@ function viewCatalog() {
   const stOpts = ['todo', 'doing', 'done'].map(s => `<option value="${s}" ${F.st === s ? 'selected' : ''}>${t(s)}</option>`).join('');
   const areaBtns = Object.entries(AREAS).map(([k, ar]) => `<button type="button" class="area-btn" data-area="${k}" aria-pressed="${F.area.includes(k)}"><i style="background:${ar.c}"></i>${esc(ar[L])}</button>`).join('');
   const any = F.q || F.sem || F.area.length || F.diff || F.st;
-  return `<section class="page-head rise"><h1>${t('catT2')}</h1><p class="lead">${t('catP2')}</p><p><a class="textlink" href="#/mapa">${t('boardLink')}</a></p></section>
+  return `<section class="page-head rise"><h1>${t('catT2')}</h1><p class="lead">${t('catP2')}</p><p><a class="textlink" href="#/rede">${t('boardLink')}</a></p></section>
   <section class="catalogue rise" aria-label="${esc(t('catT2'))}">
     <div class="filters" role="search">
       <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" value="${esc(F.q)}" placeholder="${esc(t('search'))}" aria-label="${esc(t('search'))}"></label>
@@ -327,7 +327,7 @@ function viewCourse(id) {
     <ul class="facts"><li>${t('sem')}<b>${esc(semName(c.sem))}</b></li><li>${t('area')}<b><i style="width:14px;height:4px;border-radius:1px;background:${areaC(c)}"></i>${esc(AREAS[c.area][L])}</b></li><li>${t('diff')}<b>${sig(c.diff)} ${t('diffN')[c.diff]}</b></li><li>${t('progress')}<b id="cpct">${cp}% ${t('done2')}</b></li></ul></div></header>
   <section class="pinout" aria-label="${t('pinIn')} / ${t('pinOut')}">
     <div class="pins in"><h3>${t('pinIn')}</h3>${pinList(c.pre, t('noIn'))}</div>
-    <div class="die"><div class="die-legs" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div><b>${esc(nm(c))}</b><small>${t('items')(p.t.length + p.k.length, c.topics.length + c.tasks.length)}</small>${charge(cp)}</div></div>
+    <div class="die tilt"><div class="die-legs" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div><b>${esc(nm(c))}</b><small>${t('items')(p.t.length + p.k.length, c.topics.length + c.tasks.length)}</small>${charge(cp)}</div></div>
     <div class="pins out"><h3>${t('pinOut')}</h3>${pinList(DEPS[c.id] || [], t('noOut'))}</div>
   </section>
   <div class="cols"><div>
@@ -387,7 +387,18 @@ function bindLesson() {
   const m = $('#mastered'); if (m) m.onclick = () => { const inp = $('.learned input'); setDone(inp.dataset.c, 't', +inp.dataset.i, true); location.hash = m.dataset.next; };
   onReadScroll();
 }
-window.addEventListener('scroll', () => { if ($('#readbar')) onReadScroll(); }, { passive: true });
+window.addEventListener('scroll', () => {
+  if ($('#readbar')) onReadScroll();
+  const hero = $('#heroNet'); if (hero && NET && NET.setScroll) NET.setScroll(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight || 1))));
+}, { passive: true });
+// cards lean towards the pointer, a few degrees, only with a precise pointer and when motion is allowed
+const FINE = window.matchMedia('(hover: hover) and (pointer: fine)');
+document.addEventListener('pointermove', e => {
+  if (!FINE.matches || REDUCED.matches) return;
+  const el = e.target.closest && e.target.closest('.tilt'); $$('.tilt.tilting').forEach(x => { if (x !== el) { x.classList.remove('tilting'); x.style.transform = ''; } });
+  if (!el) return; const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+  el.classList.add('tilting'); el.style.transform = `perspective(1200px) rotateX(${(-y * 3).toFixed(2)}deg) rotateY(${(x * 4).toFixed(2)}deg)`;
+}, { passive: true });
 
 /* ---------- full map with inspector ---------- */
 let pickId = null;
@@ -443,7 +454,7 @@ function showNetInsp(id, topic) {
 }
 function bindNet() {
   const done = (cid, j) => prog(cid).t.includes(j);
-  NET = window.Rede.mount($('#netStage'), {
+  NET = window.Placa.mount($('#netStage'), { lang: L,
     courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: done, name: nm, topicName: (c, j) => half(c.topics[j]), esc,
     picked: pickId, reduced: REDUCED.matches, label: t('netT'),
     onPick: (id, topic) => { history.replaceState(null, '', id ? '#/rede/' + id : '#/rede'); showNetInsp(id, topic); if (id && window.innerWidth < 1000) $('#insp').scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' }); }
