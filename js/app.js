@@ -268,7 +268,7 @@ function bindHome() {
     list.hidden = !open; b.setAttribute('aria-expanded', open); b.textContent = open ? t('hidePhase') : t('showPhase');
     openPhases = open ? [...new Set(openPhases.concat(id))] : openPhases.filter(x => x !== id); store.set('eia.open', openPhases);
   });
-  NET = window.Placa.mount($('#heroNet'), { ambient: true, lang: L, courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: doneTopic, name: nm, topicName: (c, j) => half(c.topics[j]), esc, reduced: REDUCED.matches, label: t('netT') });
+  placaReady(() => { if (NET || !$('#heroNet')) return; NET = window.Placa.mount($('#heroNet'), { ambient: true, lang: L, courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: doneTopic, name: nm, topicName: (c, j) => half(c.topics[j]), esc, reduced: REDUCED.matches, label: t('netT') }); });
 }
 
 /* ---------- home ---------- */
@@ -454,12 +454,12 @@ function showNetInsp(id, topic) {
 }
 function bindNet() {
   const done = (cid, j) => prog(cid).t.includes(j);
-  NET = window.Placa.mount($('#netStage'), { lang: L,
+  placaReady(() => { if (NET || !$('#netStage')) return; NET = window.Placa.mount($('#netStage'), { lang: L,
     courses: COURSES, sems: SEMS, deps: DEPS, pct, isDone: done, name: nm, topicName: (c, j) => half(c.topics[j]), esc,
     picked: pickId, reduced: REDUCED.matches, label: t('netT'),
     onPick: (id, topic) => { history.replaceState(null, '', id ? '#/rede/' + id : '#/rede'); showNetInsp(id, topic); if (id && window.innerWidth < 1000) $('#insp').scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' }); }
   });
-  $('#zIn').onclick = () => NET.zoomIn(); $('#zOut').onclick = () => NET.zoomOut(); $('#zFit').onclick = () => NET.reset();
+  $('#zIn').onclick = () => NET.zoomIn(); $('#zOut').onclick = () => NET.zoomOut(); $('#zFit').onclick = () => NET.reset(); });
   bindInspector();
 }
 
@@ -501,6 +501,7 @@ function chrome() {
   $('#foot').innerHTML = `<p class="close">${esc(t('closeT'))}</p><p>${esc(t('foot'))}</p>`;
 }
 let NET = null;
+const placaReady = fn => { if (window.Placa) fn(); else window.addEventListener('placa-ready', fn, { once: true }); };
 function render() {
   if (NET) { NET.destroy(); NET = null; }
   chrome();
