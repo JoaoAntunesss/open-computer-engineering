@@ -457,3 +457,6 @@ table.unis code { font: 500 13.5px var(--mono); color: var(--cold); margin-right
 .hero-net::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(4, 6, 13, .82) 0%, rgba(4, 6, 13, .45) 32%, rgba(4, 6, 13, 0) 55%); }
 .hero-copy { z-index: 2; }
 @media (max-width: 640px) { .hero-net::after { background: linear-gradient(180deg, rgba(4, 6, 13, 0) 30%, rgba(4, 6, 13, .85) 62%); } }
+
+/* the full-bleed hero uses 100vw; clip so the scrollbar width never causes sideways scroll */
+html, body { overflow-x: clip; }
