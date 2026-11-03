@@ -45,8 +45,12 @@ function mount(host, api) {
   const { courses, sems, pct, isDone, name, topicName, esc } = api;
   const ambient = !!api.ambient, reduced = !!api.reduced, onPick = api.onPick || (() => {});
   const small = () => Math.min(innerWidth, innerHeight) < 700;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, small() ? 1.5 : 2));
+  // qualidade adaptativa: 2 = brilho + resolução 1.5x; 1 = brilho + resolução 1x; 0 = sem brilho. Fica guardada para a próxima visita.
+  let Qlev = 2; try { const q = localStorage.getItem('eia.gl'); if (q != null) Qlev = Math.max(0, Math.min(2, +q)); } catch (e) { }
+  if (((navigator.hardwareConcurrency || 4) <= 4 || small()) && Qlev > 1) Qlev = 1;
+  const dprFor = q => Math.min(devicePixelRatio || 1, q >= 2 ? 1.5 : 1);
+  const renderer = new THREE.WebGLRenderer({ antialias: Qlev === 0, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(dprFor(Qlev));
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = THREE.SRGBColorSpace;
   const canvas = renderer.domElement; canvas.className = 'placa-canvas placa-gl';
   if (ambient) canvas.setAttribute('aria-hidden', 'true'); else { canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', api.label); canvas.tabIndex = 0; }
@@ -80,7 +84,7 @@ function mount(host, api) {
 
   /* ---------- chips ---------- */
   const bodyGeo = chipBody();
-  const bodyMat = new THREE.MeshPhysicalMaterial({ color: '#0d1220', roughness: .38, metalness: .15, clearcoat: .7, clearcoatRoughness: .35 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: '#0d1220', roughness: .32, metalness: .2 });
   const bodyHot = bodyMat.clone(); bodyHot.emissive = new THREE.Color('#1a0800');
   const pinGeo = new THREE.BoxGeometry(.45, .5, 1.6), pinMat = new THREE.MeshStandardMaterial({ color: '#d8b25a', metalness: 1, roughness: .28 });
   const PINS = 8, pins = new THREE.InstancedMesh(pinGeo, pinMat, chips.length * PINS * 2); scene.add(pins);
@@ -204,7 +208,7 @@ function mount(host, api) {
     composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), ambient ? .9 : .75, .55, .82); composer.addPass(bloom); composer.addPass(new OutputPass());
   }
-  if (!small()) setupComposer();
+  if (Qlev >= 1) setupComposer();
 
   /* ---------- camera ---------- */
   let W = 1, H = 1;
@@ -308,11 +312,21 @@ function mount(host, api) {
   }
 
   /* ---------- loop ---------- */
-  let raf = 0, running = true, visible = true, scrollK = 0, idleUntil = 0;
+  let raf = 0, running = true, visible = true, scrollK = 0, idleUntil = 0, lastDraw = 0, ftAvg = 16, ftN = 0;
+  function degrade() {
+    Qlev--; ftN = 0; ftAvg = 16; try { localStorage.setItem('eia.gl', String(Qlev)); } catch (e) { }
+    renderer.setPixelRatio(dprFor(Qlev));
+    if (Qlev < 1 && composer) { composer.dispose(); composer = null; bloom = null; }
+    resize();
+  }
   const T0 = performance.now();
   function wake() { idleUntil = performance.now() + 1500; if (!raf && running && visible) raf = requestAnimationFrame(frame); }
   function frame(now) {
-    raf = 0; const t = (now - T0) / 1000;
+    raf = 0;
+    if (ambient && !intro && now - lastDraw < 30) { if (running && visible) raf = requestAnimationFrame(frame); return; }   // fundo animado: ~30 imagens por segundo chegam
+    const dt = now - lastDraw; lastDraw = now;
+    if (dt < 250) { ftAvg = ftAvg * .92 + dt * .08; if (++ftN > 45 && Qlev > 0 && ftAvg > (ambient ? 48 : 30)) degrade(); }
+    const t = (now - T0) / 1000;
     traceMat.uniforms.uTime.value = reduced ? 0 : t;
     if (intro) {
       const u = (now - (introT0 || (introT0 = now))) / INTRO;
