@@ -18,7 +18,7 @@ let L = store.get('eia.lang', (navigator.language || 'pt').slice(0, 2) === 'pt' 
 const T = {
   pt: {
     brand: 'Engenharia Informática Aberta', home: 'Trilho', net: 'Circuito', cat: 'Cadeiras', map: 'Mapa', about: 'Sobre',
-    cont: 'Continuar', start: 'Começar', homeT: 'Do transístor à inteligência artificial.', homeP: 'Uma licenciatura completa em Engenharia Informática, com lições, exercícios e um trilho que te diz sempre o que fazer a seguir. Juntámos o que ensinam o IST, a FEUP, a UMinho, a UAb, o MIT, Harvard, Oxford, Stanford, CMU e Berkeley.',
+    cont: 'Continuar', start: 'Começar', homeT: 'Do transístor à inteligência artificial.', homeP: 'Uma licenciatura completa em Engenharia Informática, do zero ao nível sénior, com lições, exercícios e um trilho que te diz sempre o que fazer a seguir. Se usas IA e ainda não sabes ler nem escrever código, começa pela Fase 0. Juntámos o que ensinam o IST, a FEUP, a UMinho, a UAb, o MIT, Harvard, Oxford, Stanford, CMU e Berkeley.',
     stepT: 'O teu próximo passo', nextLesson: (n, m) => `Lição ${n} de ${m}`, nextTask: (n, m) => `Tarefa ${n} de ${m}`, minutes: n => `${n} min de leitura`, noLesson: 'Lição em preparação, com recursos para estudar',
     after: 'Depois disto', allDone: 'Concluíste o curso inteiro. Agora é escolher uma área e ir mais fundo.',
     howT: 'Como se usa', how: ['Segue o trilho pela ordem. Cada cadeira assenta nas anteriores, como num curso a sério.', 'Em cada tópico há uma lição com exemplos e exercícios resolvidos. Quando o dominares, marca-o.', 'O teu circuito acende à medida que aprendes, e o botão Continuar leva-te sempre ao passo seguinte.'],
@@ -52,7 +52,7 @@ const T = {
   },
   en: {
     brand: 'Open Computer Engineering', home: 'Path', net: 'Circuit', cat: 'Courses', map: 'Map', about: 'About',
-    cont: 'Continue', start: 'Start', homeT: 'From transistor to artificial intelligence.', homeP: 'A complete computer science and engineering degree, with lessons, exercises and a path that always tells you what to do next. It brings together what IST, FEUP, UMinho, UAb, MIT, Harvard, Oxford, Stanford, CMU and Berkeley teach.',
+    cont: 'Continue', start: 'Start', homeT: 'From transistor to artificial intelligence.', homeP: 'A complete computer science and engineering degree, from zero to senior level, with lessons, exercises and a path that always tells you what to do next. It brings together what IST, FEUP, UMinho, UAb, MIT, Harvard, Oxford, Stanford, CMU and Berkeley teach. If you use AI but can’t yet read or write code, start with Stage 0.',
     stepT: 'Your next step', nextLesson: (n, m) => `Lesson ${n} of ${m}`, nextTask: (n, m) => `Task ${n} of ${m}`, minutes: n => `${n} min read`, noLesson: 'Lesson in preparation, with resources to study',
     after: 'After this', allDone: 'You finished the whole degree. Now pick an area and go deeper.',
     howT: 'How it works', how: ['Follow the path in order. Each course builds on the earlier ones, like a real degree.', 'Every topic has a lesson with examples and solved exercises. Tick it when you have mastered it.', 'Your circuit lights up as you learn, and the Continue button always takes you to the next step.'],
