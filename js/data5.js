@@ -1,105 +1,9 @@
-/* Engenharia Informática Aberta — percurso "do zero ao sénior".
-   Fase 0: para quem usa muito IA e ainda não sabe ler nem escrever código.
-   Júnior e Sénior: o que se aprende depois do curso, no trabalho. */
+/* Engenharia Informática Aberta — fases depois do curso (Júnior e Sénior) e prática de ler, prever, depurar e escrever código acrescentada a cada cadeira. */
 (function () {
   const S = window.SEMS, C = window.COURSES;
-  S.unshift({ id: 'Z0', pt: 'Fase 0 · Ler e escrever código', en: 'Stage 0 · Reading and writing code' });
   S.push({ id: 'JR', pt: 'Depois do curso · Júnior', en: 'After the degree · Junior' });
   S.push({ id: 'SR', pt: 'Depois do curso · Sénior', en: 'After the degree · Senior' });
   const mk = (id, pt, en, sem, area, diff, pre, dpt, den, topics, tasks, tools, res, unis) => ({ id, pt, en, sem, area, diff, pre, dpt, den, topics, tasks, tools, res, unis: unis || {} });
-  const zero = [
-    mk('ler-codigo', 'Ler Código', 'Reading Code', 'Z0', 'prog', 1, [],
-      'Para quem usa IA e aceita código que não percebe. Aprendes a ler um programa linha a linha e a prever o que ele faz antes de o correr.',
-      'For people who use AI and accept code they don’t understand. Learn to read a program line by line and predict what it does before running it.',
-      ['O que é um programa e como o computador o lê|What a program is and how the computer reads it',
-       'Variáveis e a tabela de rastreio|Variables and the trace table',
-       'Decisões: if, elif e else|Decisions: if, elif and else',
-       'Repetições: for e while|Repetition: for and while',
-       'Funções: o que entra, o que sai|Functions: what goes in, what comes out',
-       'Listas e dicionários|Lists and dictionaries',
-       'Ler um ficheiro de código de outra pessoa|Reading someone else’s code file'],
-      ['Escolhe 5 funções de um projeto teu e escreve por palavras tuas o que cada uma faz, antes de perguntar à IA|Pick 5 functions from one of your projects and write in your own words what each does, before asking an AI',
-       'Faz a tabela de rastreio de 10 programas curtos e só depois corre-os para confirmar|Trace 10 short programs by hand and only then run them to check',
-       'Lê o README e o ficheiro principal de um projeto open source pequeno e desenha num papel como as partes se ligam|Read the README and main file of a small open-source project and sketch how the parts connect'],
-      ['Python 3 (no browser, nesta página)', 'Python Tutor', 'VS Code', 'Thonny'],
-      [['Python Tutor — ver o código a correr passo a passo', 'Philip Guo', 'https://pythontutor.com/', 'p'],
-       ['Think Python (3.ª ed.)', 'Allen B. Downey', 'https://allendowney.github.io/ThinkPython/', 'b'],
-       ['The Programmer’s Brain', 'Felienne Hermans', 'https://www.manning.com/books/the-programmers-brain', 'b'],
-       ['CS50 Python', 'Harvard', 'https://cs50.harvard.edu/python/', 'c']],
-      { ist: 'Fundamentos da Programação (início)', uab: 'Introdução à Programação (início)', harv: 'CS50P', mit: '6.100L (primeiras semanas)' }),
-    mk('depurar', 'Depurar (Debugging)', 'Debugging', 'Z0', 'prog', 1, ['ler-codigo'],
-      'Quando algo falha, ler o erro, encontrar a linha e perceber a causa, sem colar tudo na IA à espera de sorte.',
-      'When something breaks, read the error, find the line and understand the cause, instead of pasting everything into an AI and hoping.',
-      ['Ler mensagens de erro e tracebacks|Reading error messages and tracebacks',
-       'Os erros mais comuns e o que querem dizer|The most common errors and what they mean',
-       'Depurar com print|Debugging with print',
-       'O depurador: pontos de paragem e passo a passo|The debugger: breakpoints and stepping',
-       'Isolar o problema: reproduzir e cortar ao meio|Isolating the problem: reproduce and bisect',
-       'Erros de lógica: quando não aparece erro nenhum|Logic errors: when no error appears'],
-      ['Durante uma semana, sempre que um programa teu falhar, escreve num caderno o erro, a linha e a causa antes de corrigires|For a week, every time a program of yours fails, write down the error, the line and the cause before fixing it',
-       'Usa o depurador do VS Code para seguir um programa de 30 linhas do princípio ao fim|Use the VS Code debugger to step through a 30-line program from start to end',
-       'Pega num bug real de um projeto teu e reduz o código até ficarem 10 linhas que ainda o mostram|Take a real bug from one of your projects and cut the code down to 10 lines that still show it'],
-      ['Python 3', 'VS Code (Run and Debug)', 'DevTools do Chrome', 'Python Tutor'],
-      [['The Missing Semester: Debugging and Profiling', 'MIT', 'https://missing.csail.mit.edu/2020/debugging-profiling/', 'c'],
-       ['Debugging: The 9 Indispensable Rules', 'David J. Agans', 'https://debuggingrules.com/', 'b'],
-       ['Debug Python in VS Code', 'Microsoft', 'https://code.visualstudio.com/docs/python/debugging', 'd'],
-       ['Chrome DevTools: Debug JavaScript', 'Google', 'https://developer.chrome.com/docs/devtools/javascript', 'd']],
-      { mit: 'The Missing Semester (Debugging)', stan: 'CS106A (debugging)' }),
-    mk('escrever-codigo', 'Escrever Código do Zero', 'Writing Code from Scratch', 'Z0', 'prog', 1, ['ler-codigo'],
-      'Passar de "pedir à IA" para escrever tu: transformar um problema num plano e o plano em código que funciona, aos bocadinhos.',
-      'Go from "asking the AI" to writing it yourself: turn a problem into a plan and the plan into working code, a little at a time.',
-      ['Do problema ao plano: decompor e escrever pseudocódigo|From problem to plan: decompose and write pseudocode',
-       'Entrada, processamento e saída|Input, processing and output',
-       'Passos pequenos: escrever, correr, confirmar|Small steps: write, run, check',
-       'Organizar com funções|Organising with functions',
-       'Testar o que escreveste com assert|Testing what you wrote with assert',
-       'Um projeto pequeno do princípio ao fim, sem IA|A small project end to end, without AI'],
-      ['Escreve sem IA: jogo de adivinhar o número, conversor de unidades e lista de compras no terminal|Write without AI: number guessing game, unit converter and a terminal shopping list',
-       'Para cada programa, escreve primeiro o pseudocódigo em comentários e só depois o código|For each program, write the pseudocode as comments first and only then the code',
-       'Resolve 20 exercícios de nível fácil no Exercism sem IA e pede feedback a um mentor|Solve 20 easy Exercism exercises without AI and ask a mentor for feedback'],
-      ['Python 3', 'VS Code', 'Exercism', 'pytest'],
-      [['Automate the Boring Stuff with Python', 'Al Sweigart', 'https://automatetheboringstuff.com/', 'b'],
-       ['How to Design Programs (2.ª ed.)', 'Felleisen, Findler, Flatt, Krishnamurthi', 'https://htdp.org/', 'b'],
-       ['Exercism — Python', '—', 'https://exercism.org/tracks/python', 'p'],
-       ['Advent of Code', 'Eric Wastl', 'https://adventofcode.com/', 'p']],
-      { ist: 'Fundamentos da Programação', feup: 'Fundamentos da Programação', cmu: '15-112 (primeiras semanas)', berk: 'CS 10 / CS 61A (início)' }),
-    mk('rever-ia', 'Programar com IA sem Perder o Controlo', 'Coding with AI Without Losing Control', 'Z0', 'prog', 2, ['ler-codigo', 'depurar'],
-      'A IA escreve depressa, mas quem responde pelo código és tu. Aprendes a rever o que ela gera, a apanhar os erros típicos e a usá-la como tutor.',
-      'AI writes fast, but you are the one accountable for the code. Learn to review what it generates, catch its typical mistakes and use it as a tutor.',
-      ['Como a IA gera código e porque erra|How AI generates code and why it gets things wrong',
-       'Ler antes de aceitar: rever código gerado|Read before you accept: reviewing generated code',
-       'Os erros típicos da IA: casos-limite, APIs inventadas, segurança|Typical AI mistakes: edge cases, invented APIs, security',
-       'Pedir à IA para ensinar, não para fazer|Asking AI to teach, not to do',
-       'Testes como rede de segurança para código gerado|Tests as a safety net for generated code',
-       'Regras: escola, empresa, licenças e dados|Rules: school, company, licences and data'],
-      ['Pede a uma IA 5 funções pequenas e encontra pelo menos um problema em cada uma, sem correr o código|Ask an AI for 5 small functions and find at least one problem in each without running them',
-       'Escreve testes para uma função gerada por IA antes de a usares|Write tests for an AI-generated function before using it',
-       'Refaz sem IA uma funcionalidade que tinhas pedido à IA e compara as duas versões|Rewrite without AI a feature you had asked an AI for, and compare both versions'],
-      ['Python 3', 'pytest', 'GitHub Copilot / Claude / ChatGPT', 'git diff'],
-      [['OWASP Top 10 for LLM Applications', 'OWASP', 'https://owasp.org/www-project-top-10-for-large-language-model-applications/', 'd'],
-       ['Code Review Developer Guide', 'Google', 'https://google.github.io/eng-practices/review/', 'd'],
-       ['Prompt engineering overview', 'Anthropic', 'https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview', 'd']],
-      {}),
-    mk('linguagens', 'As Linguagens do Curso', 'The Languages of the Degree', 'Z0', 'prog', 2, ['ler-codigo'],
-      'O mesmo programa em todas as linguagens que as universidades usam, para conseguires ler qualquer uma quando a cadeira chegar.',
-      'The same program in every language universities use, so you can read any of them when the course gets there.',
-      ['Python: a linguagem de entrada|Python: the entry language',
-       'C: perto da máquina|C: close to the machine',
-       'Java: objetos e tipos explícitos|Java: objects and explicit types',
-       'JavaScript: a linguagem da web|JavaScript: the language of the web',
-       'SQL: perguntar a uma base de dados|SQL: asking a database',
-       'Haskell: programação funcional|Haskell: functional programming',
-       'Prolog: programação em lógica|Prolog: logic programming',
-       'Assembly (RISC-V): o que o processador vê|Assembly (RISC-V): what the processor sees'],
-      ['Escreve o mesmo programa (média de uma lista, ignorando valores negativos) em Python, C, Java e JavaScript|Write the same program (average of a list, ignoring negatives) in Python, C, Java and JavaScript',
-       'Lê o exemplo de cada lição e explica em voz alta, linha a linha, o que faz|Read each lesson’s example and explain it aloud, line by line',
-       'Faz uma tabela com as diferenças que encontraste: tipos, ciclos, funções, memória|Make a table of the differences you found: types, loops, functions, memory'],
-      ['Python 3', 'gcc/clang', 'JDK (Java)', 'Node.js', 'SQLite/MySQL', 'GHC (Haskell)', 'SWI-Prolog', 'RARS / Venus (RISC-V)'],
-      [['Learn X in Y minutes', '—', 'https://learnxinyminutes.com/', 'd'],
-       ['Rosetta Code', '—', 'https://rosettacode.org/', 'p'],
-       ['Exercism (mais de 70 linguagens)', '—', 'https://exercism.org/tracks', 'p']],
-      { ist: 'Fundamentos da Programação, Introdução aos Algoritmos e Estruturas de Dados, Programação com Objetos, Bases de Dados', um: 'Programação Funcional, Laboratórios de Informática', uab: 'Programação, Programação por Objetos, Fundamentos de Bases de Dados', berk: 'CS 61A, 61B, 61C' })
-  ];
   const later = [
     mk('jr-equipa', 'Trabalhar numa Equipa de Software', 'Working in a Software Team', 'JR', 'es', 2, ['es'],
       'O que ninguém ensina no curso: entrar numa codebase grande, trabalhar com Git em equipa, pedir e fazer code review.',
@@ -211,7 +115,40 @@
        ['The Manager’s Path', 'Camille Fournier', 'https://www.oreilly.com/library/view/the-managers-path/9781491973882/', 'b'],
        ['Design Docs at Google', 'Malte Ubl', 'https://www.industrialempathy.com/posts/design-docs-at-google/', 'd'],
        ['StaffEng', 'Will Larson', 'https://staffeng.com/', 'd']],
+      {}),
+    mk('rever-ia', 'Programar com Assistentes de IA', 'Programming with AI Assistants', 'JR', 'es', 2, ['intro-prog', 'es'],
+      'Como funcionam os assistentes de código, como rever o que geram, os erros típicos a procurar e as regras da escola e das empresas.',
+      'How coding assistants work, how to review what they generate, the typical mistakes to look for and the rules at university and at work.',
+      ['Como a IA gera código e porque erra|How AI generates code and why it gets things wrong',
+       'Ler antes de aceitar: rever código gerado|Read before you accept: reviewing generated code',
+       'Os erros típicos da IA: casos-limite, APIs inventadas, segurança|Typical AI mistakes: edge cases, invented APIs, security',
+       'Pedir à IA para ensinar, não para fazer|Asking AI to teach, not to do',
+       'Testes como rede de segurança para código gerado|Tests as a safety net for generated code',
+       'Regras: escola, empresa, licenças e dados|Rules: school, company, licences and data'],
+      ['Pede a uma IA 5 funções pequenas e encontra pelo menos um problema em cada uma, sem correr o código|Ask an AI for 5 small functions and find at least one problem in each without running them',
+       'Escreve testes para uma função gerada por IA antes de a usares|Write tests for an AI-generated function before using it',
+       'Refaz sem IA uma funcionalidade que tinhas pedido à IA e compara as duas versões|Rewrite without AI a feature you had asked an AI for, and compare both versions'],
+      ['Python 3', 'pytest', 'GitHub Copilot / Claude / ChatGPT', 'git diff'],
+      [['OWASP Top 10 for LLM Applications', 'OWASP', 'https://owasp.org/www-project-top-10-for-large-language-model-applications/', 'd'],
+       ['Code Review Developer Guide', 'Google', 'https://google.github.io/eng-practices/review/', 'd'],
+       ['Prompt engineering overview', 'Anthropic', 'https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview', 'd']],
       {})
   ];
-  C.unshift(...zero); C.push(...later);
+  // Ler, prever, depurar e escrever código: aplicado dentro de cada cadeira (tópicos acrescentados no fim, para não mexer no progresso guardado)
+  const BYID = Object.fromEntries(C.map(c => [c.id, c]));
+  const mais = {
+    'ferramentas': ['Os erros mais comuns e o que querem dizer|The most common errors and what they mean', 'Depurar com print|Debugging with print', 'O depurador passo a passo|The debugger, step by step', 'Isolar o problema: reproduzir e cortar ao meio|Isolating the problem: reproduce and bisect', 'Erros de lógica: quando não aparece erro|Logic errors: when no error appears'],
+    'intro-prog': ['Ler código de outra pessoa|Reading someone else’s code', 'Do problema ao plano: pseudocódigo|From problem to plan: pseudocode', 'Escrever em passos pequenos|Writing in small steps', 'Um projeto do princípio ao fim, sem ajuda|A project from start to finish, unaided'],
+    'logica': ['Ler código Prolog|Reading Prolog code'],
+    'prog-c': ['Ler código C|Reading C code'],
+    'funcional': ['Ler código Haskell|Reading Haskell code'],
+    'poo': ['Ler código Java|Reading Java code'],
+    'arq': ['Ler Assembly RISC-V|Reading RISC-V assembly'],
+    'bd': ['Ler e prever SQL|Reading and predicting SQL'],
+    'web': ['Ler código JavaScript|Reading JavaScript code']
+  };
+  const LPC = 'Ler, prever e corrigir código|Read, predict and fix code';
+  ['etica', 'calculo', 'algebra', 'discreta', 'digital', 'fisica', 'aed', 'prob', 'so', 'algoritmos', 'teoria', 'ipm', 'redes', 'es', 'ia', 'compiladores', 'numerico', 'ml', 'graficos', 'sd', 'seguranca', 'projeto', 'lp', 'paralela', 'formais', 'cloud'].forEach(id => { (mais[id] = mais[id] || []).push(LPC); });
+  Object.entries(mais).forEach(([id, ts]) => { if (BYID[id]) BYID[id].topics.push(...ts); });
+  C.push(...later);
 })();
