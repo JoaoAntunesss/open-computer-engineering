@@ -22,7 +22,7 @@ const T = {
     stepT: 'O teu próximo passo', nextLesson: (n, m) => `Lição ${n} de ${m}`, nextTask: (n, m) => `Tarefa ${n} de ${m}`, minutes: n => `${n} min de leitura`, noLesson: 'Lição em preparação, com recursos para estudar',
     after: 'Depois disto', allDone: 'Concluíste o curso inteiro. Agora é escolher uma área e ir mais fundo.',
     howT: 'Como se usa', how: ['Segue o trilho pela ordem. Cada cadeira assenta nas anteriores, como num curso a sério.', 'Em cada tópico há uma lição com exemplos e exercícios resolvidos. Quando o dominares, marca-o.', 'O teu circuito acende à medida que aprendes, e o botão Continuar leva-te sempre ao passo seguinte.'],
-    trailT: 'O trilho', trailP: 'Seis semestres e uma fase avançada, pela ordem em que se aprendem.', phaseDone: (a, b) => `${a} de ${b} cadeiras concluídas`, showPhase: 'Ver cadeiras', hidePhase: 'Esconder',
+    trailT: 'O trilho', trailP: 'Da fase 0, para quem usa IA e ainda não sabe ler nem escrever código, aos seis semestres, à fase avançada e ao que vem depois do curso: júnior e sénior.', run: 'Correr', runReset: 'Repor', runHint: 'Prevê o resultado antes de carregar. Podes mudar o código.', runEdit: 'Código editável', runLoad: 'A preparar o Python no teu browser (só da primeira vez)…', runNone: '(o programa não mostrou nada)', phaseDone: (a, b) => `${a} de ${b} cadeiras concluídas`, showPhase: 'Ver cadeiras', hidePhase: 'Esconder',
     st: { done: 'Concluída', doing: 'Em curso', ready: 'Pronta a começar', wait: 'Depois de' }, youAreHere: 'Estás aqui',
     statT: 'Onde estás', statTopics: 'tópicos dominados', statCourses: 'cadeiras concluídas', statPhase: 'fase atual',
     lessonsIn: 'Nesta cadeira', tasksLink: 'Tarefas práticas da cadeira', mastered: 'Dominei, seguinte', skip: 'Ainda não, seguinte', masteredLast: 'Dominei, voltar à cadeira', reading: 'Progresso de leitura',
@@ -56,7 +56,7 @@ const T = {
     stepT: 'Your next step', nextLesson: (n, m) => `Lesson ${n} of ${m}`, nextTask: (n, m) => `Task ${n} of ${m}`, minutes: n => `${n} min read`, noLesson: 'Lesson in preparation, with resources to study',
     after: 'After this', allDone: 'You finished the whole degree. Now pick an area and go deeper.',
     howT: 'How it works', how: ['Follow the path in order. Each course builds on the earlier ones, like a real degree.', 'Every topic has a lesson with examples and solved exercises. Tick it when you have mastered it.', 'Your circuit lights up as you learn, and the Continue button always takes you to the next step.'],
-    trailT: 'The path', trailP: 'Six semesters and an advanced stage, in the order they are learned.', phaseDone: (a, b) => `${a} of ${b} courses completed`, showPhase: 'Show courses', hidePhase: 'Hide',
+    trailT: 'The path', trailP: 'From stage 0, for people who use AI but can’t yet read or write code, through six semesters and an advanced stage to what comes after the degree: junior and senior.', run: 'Run', runReset: 'Reset', runHint: 'Predict the output before you press it. You can edit the code.', runEdit: 'Editable code', runLoad: 'Preparing Python in your browser (first time only)…', runNone: '(the program printed nothing)', phaseDone: (a, b) => `${a} of ${b} courses completed`, showPhase: 'Show courses', hidePhase: 'Hide',
     st: { done: 'Completed', doing: 'In progress', ready: 'Ready to start', wait: 'After' }, youAreHere: 'You are here',
     statT: 'Where you are', statTopics: 'topics mastered', statCourses: 'courses completed', statPhase: 'current stage',
     lessonsIn: 'In this course', tasksLink: 'Hands-on tasks for this course', mastered: 'Mastered, next', skip: 'Not yet, next', masteredLast: 'Mastered, back to the course', reading: 'Reading progress',
@@ -356,7 +356,7 @@ function md(src) { // small, safe Markdown subset: headings, paragraphs, lists, 
   while (i < lines.length) {
     const l = lines[i];
     let m;
-    if ((m = /^(`{3,})(.*)$/.exec(l))) { const fence = m[1], lang = m[2].trim(); const buf = []; i++; while (i < lines.length && lines[i].trim() !== fence) buf.push(lines[i++]); i++; out.push(`<pre class="code"${lang ? ` data-lang="${esc(lang)}"` : ''}><code>${esc(buf.join('\n'))}</code></pre>`); continue; }
+    if ((m = /^(`{3,})(.*)$/.exec(l))) { const fence = m[1], lang = m[2].trim(); const buf = []; i++; while (i < lines.length && lines[i].trim() !== fence) buf.push(lines[i++]); i++; const run = /\s+run$/.test(lang), lg = lang.replace(/\s+run$/, ''); out.push(run ? `<div class="runbox" data-run="${esc(lg)}"><pre class="code" data-lang="${esc(lg)}"><code contenteditable="true" spellcheck="false" aria-label="${t('runEdit')}">${esc(buf.join('\n'))}</code></pre><div class="run-bar"><button type="button" class="run-btn">${t('run')}</button><button type="button" class="run-reset">${t('runReset')}</button><span class="run-hint">${t('runHint')}</span></div><pre class="run-out" hidden></pre></div>` : `<pre class="code"${lang ? ` data-lang="${esc(lang)}"` : ''}><code>${esc(buf.join('\n'))}</code></pre>`); continue; }
     if ((m = /^\?\?\?\s*(.*)$/.exec(l)) && m[1]) { const buf = []; i++; while (i < lines.length && lines[i].trim() !== '???') buf.push(lines[i++]); i++; out.push(`<details class="sol"><summary>${inline(m[1])}</summary><div>${md(buf.join('\n'))}</div></details>`); continue; }
     if (/^\|.*\|\s*$/.test(l) && /^\|?\s*:?-{3,}/.test(lines[i + 1] || '')) { const head = cells(l); i += 2; const body = []; while (i < lines.length && /^\|.*\|\s*$/.test(lines[i])) body.push(cells(lines[i++])); out.push(`<div class="tbl"><table><thead><tr>${head.map(h => `<th>${inline(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`); continue; }
     if ((m = /^(#{2,4})\s+(.*)/.exec(l))) { const n = m[1].length; out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue; }
@@ -382,6 +382,32 @@ function viewLesson(id, n) {
 }
 let readRaf = 0;
 function onReadScroll() { cancelAnimationFrame(readRaf); readRaf = requestAnimationFrame(() => { const bar = $('#readbar'); if (!bar) return; const a = $('.lesson'); const r = a.getBoundingClientRect(), total = r.height - innerHeight; bar.style.transform = `scaleX(${Math.max(0, Math.min(1, total > 0 ? -r.top / total : 1))})`; }); }
+let PYO = null;
+function loadPy() { if (PYO) return PYO; PYO = new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js'; sc.onload = () => window.loadPyodide().then(ok, ko); sc.onerror = ko; document.head.appendChild(sc); }); PYO.catch(() => { PYO = null; }); return PYO; }
+async function runCode(box) {
+  const lang = box.dataset.run, code = box.querySelector('code').innerText, out = box.querySelector('.run-out'), btn = box.querySelector('.run-btn');
+  out.hidden = false; out.classList.remove('err'); btn.disabled = true; let txt = '';
+  try {
+    if (/^py/.test(lang)) {
+      out.textContent = t('runLoad'); const py = await loadPy(); const buf = [];
+      py.setStdout({ batched: x => buf.push(x) }); py.setStderr({ batched: x => buf.push(x) });
+      try { await py.runPythonAsync(code); } catch (e) { const msg = String(e.message || e).trim(), ln = [...msg.matchAll(/File "<exec>", line (\d+)/g)].pop(); buf.push((ln ? (L === 'pt' ? `Linha ${ln[1]}: ` : `Line ${ln[1]}: `) : '') + msg.split('\n').pop()); out.classList.add('err'); }
+      txt = buf.join('\n');
+    } else if (/^(js|javascript)$/.test(lang)) {
+      const buf = [], fmt = v => typeof v === 'string' ? v : (() => { try { return JSON.stringify(v); } catch (e) { return String(v); } })();
+      const con = { log: (...a) => buf.push(a.map(fmt).join(' ')), error: (...a) => buf.push(a.map(fmt).join(' ')) };
+      try { new Function('console', code)(con); } catch (e) { buf.push(e.name + ': ' + e.message); out.classList.add('err'); }
+      txt = buf.join('\n');
+    }
+  } catch (e) { txt = String(e); out.classList.add('err'); }
+  out.textContent = txt || t('runNone'); btn.disabled = false;
+}
+function bindRunners() {
+  $$('.runbox').forEach(b => { const code = b.querySelector('code'), orig = code.textContent;
+    b.querySelector('.run-btn').onclick = () => runCode(b);
+    b.querySelector('.run-reset').onclick = () => { code.textContent = orig; const o = b.querySelector('.run-out'); o.hidden = true; o.textContent = ''; };
+    code.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '    '); } if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runCode(b); } }); });
+}
 function bindLesson() {
   $$('.learned input').forEach(inp => inp.onchange = () => setDone(inp.dataset.c, 't', +inp.dataset.i, inp.checked));
   const m = $('#mastered'); if (m) m.onclick = () => { const inp = $('.learned input'); setDone(inp.dataset.c, 't', +inp.dataset.i, true); location.hash = m.dataset.next; };
@@ -508,7 +534,7 @@ function render() {
   const h = location.hash.replace(/^#\/?/, ''), app = $('#app'), seg = h.split('/');
   let nav = 'home', title = '';
   if (seg[0] === 'c' && seg[1]) { app.innerHTML = viewCourse(seg[1]); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] ? nm(BY[seg[1]]) : ''; }
-  else if (seg[0] === 'l' && seg[1]) { app.innerHTML = viewLesson(seg[1], +seg[2] || 1); bindLesson(); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] && BY[seg[1]].topics[(+seg[2] || 1) - 1] ? half(BY[seg[1]].topics[(+seg[2] || 1) - 1]) : ''; }
+  else if (seg[0] === 'l' && seg[1]) { app.innerHTML = viewLesson(seg[1], +seg[2] || 1); bindLesson(); bindRunners(); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] && BY[seg[1]].topics[(+seg[2] || 1) - 1] ? half(BY[seg[1]].topics[(+seg[2] || 1) - 1]) : ''; }
   else if (seg[0] === 'rede' || seg[0] === 'network') { app.innerHTML = viewNet(seg[1]); bindNet(); nav = 'net'; title = t('netT'); }
   else if (seg[0] === 'cadeiras' || seg[0] === 'courses') { app.innerHTML = viewCatalog(); bindCatalog(); nav = 'cat'; title = t('catT2'); }
   else if (seg[0] === 'mapa' || seg[0] === 'map') { app.innerHTML = viewMap(seg[1]); bindMap(); nav = 'cat'; title = t('mapT'); }
