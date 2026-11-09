@@ -395,8 +395,11 @@ async function runCode(box) {
       txt = buf.join('\n');
     } else if (/^(js|javascript)$/.test(lang)) {
       const buf = [], fmt = v => typeof v === 'string' ? v : (() => { try { return JSON.stringify(v); } catch (e) { return String(v); } })();
-      const con = { log: (...a) => buf.push(a.map(fmt).join(' ')), error: (...a) => buf.push(a.map(fmt).join(' ')) };
+      let pronto = false;
+      const escreve = (...a) => { buf.push(a.map(fmt).join(' ')); if (pronto) out.textContent = buf.join('\n'); };   // mensagens assíncronas (setTimeout, promessas) aparecem depois
+      const con = { log: escreve, error: escreve, warn: escreve, info: escreve };
       try { new Function('console', code)(con); } catch (e) { buf.push(e.name + ': ' + e.message); out.classList.add('err'); }
+      pronto = true;                      // o resultado é escrito já a seguir, de forma síncrona
       txt = buf.join('\n');
     }
   } catch (e) { txt = String(e); out.classList.add('err'); }
