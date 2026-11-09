@@ -6,6 +6,11 @@
 <title>Engenharia Informática Aberta</title>
 <meta name="description" content="Um curso de Engenharia Informática completo e gratuito, do zero ao nível sénior, com prática de ler e escrever código em cada cadeira: cadeiras por ordem, mapa de pré-requisitos, tarefas, programas e livros gratuitos, comparando IST, FEUP, UMinho, UAb, MIT, Harvard, Oxford, Stanford, CMU e Berkeley.">
 <meta name="theme-color" content="#04060d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eng. Informática">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2304060d'/%3E%3Cpath d='M11 4v4M16 4v4M21 4v4M11 24v4M16 24v4M21 24v4M4 11h4M4 16h4M4 21h4M24 11h4M24 16h4M24 21h4' stroke='%233a96ff' stroke-width='2' stroke-linecap='round'/%3E%3Crect x='8' y='8' width='16' height='16' rx='2.5' fill='%2316224a' stroke='%233a96ff' stroke-width='1.6'/%3E%3Crect x='12.5' y='12.5' width='7' height='7' rx='1' fill='%23ff8030'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +49,7 @@ const gl = (() => { try { const c = document.createElement('canvas'); return !!(
 const classic = () => new Promise(r => { const s = document.createElement('script'); s.src = 'js/placa.js'; s.onload = s.onerror = r; document.head.appendChild(s); });
 try { if (!gl) throw 0; await import('./js/placa3d.js'); } catch (e) { await classic(); }
 window.dispatchEvent(new Event('placa-ready'));
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>

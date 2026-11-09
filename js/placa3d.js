@@ -47,7 +47,7 @@ function mount(host, api) {
   const small = () => Math.min(innerWidth, innerHeight) < 700;
   // qualidade adaptativa: 2 = brilho + resolução 1.5x; 1 = brilho + resolução 1x; 0 = sem brilho. Fica guardada para a próxima visita.
   let Qlev = 2; try { const q = localStorage.getItem('eia.gl'); if (q != null) Qlev = Math.max(0, Math.min(2, +q)); } catch (e) { }
-  if (((navigator.hardwareConcurrency || 4) <= 4 || small()) && Qlev > 1) Qlev = 1;
+  if (((navigator.hardwareConcurrency || 4) <= 4 || small() || !ambient) && Qlev > 1) Qlev = 1;   // a placa interativa começa em 1x: fluidez antes de nitidez
   const dprFor = q => Math.min(devicePixelRatio || 1, q >= 2 ? 1.5 : 1);
   const renderer = new THREE.WebGLRenderer({ antialias: Qlev === 0, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(dprFor(Qlev));
@@ -119,7 +119,7 @@ function mount(host, api) {
     top.rotation.x = -Math.PI / 2; top.position.y = CH + .21; lift.add(top); ch.top = top;
     const led = new THREE.Mesh(ledGeo, new THREE.MeshBasicMaterial({ color: COLD, toneMapped: false })); led.position.set(-CW / 2 + 1.3, CH + .25, -CD / 2 + 1.2); led.scale.y = .4; lift.add(led); ch.led = led;
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: HOT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
-    halo.scale.set(CW * 2.4, CW * 2.4, 1); halo.position.y = 1; grp.add(halo); ch.halo = halo;
+    halo.scale.set(CW * 1.9, CW * 1.9, 1); halo.position.y = 1; grp.add(halo); ch.halo = halo;
   });
   function placePins() {
     let k = 0;
@@ -233,25 +233,32 @@ function mount(host, api) {
     controls = new OrbitControls(camera, canvas); controls.enableDamping = !reduced; controls.dampingFactor = .08;
     controls.maxPolarAngle = Math.PI * .44; controls.minDistance = 25; controls.maxDistance = 420; controls.screenSpacePanning = false;
     controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    controls.addEventListener('start', () => { controls.userMoved = true; fly = null; }); controls.addEventListener('change', wake);
+    controls.addEventListener('start', () => { controls.userMoved = true; fly = null; dragging = true; }); controls.addEventListener('end', () => { dragging = false; }); controls.addEventListener('change', wake);
   }
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hitP = new THREE.Vector3();
+  const planeAt = h => new THREE.Plane(new THREE.Vector3(0, 1, 0), -h), pTop = planeAt(CH), pComp = planeAt(.6);
   let hover = null, hoverComp = -1, focusId = api.picked || null;
   function pickAt(e) {
     const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera);
-    const hc = ray.intersectObjects([compCold, compHot], false)[0]; if (hc) return { comp: hc.instanceId };
-    const h = ray.intersectObjects(pickables, false)[0]; return h ? { chip: h.object.userData.chip } : {};
+    // sem raycasting de malhas: interseta o raio com o plano da placa e testa retângulos (barato, mesmo com centenas de componentes)
+    if (ray.ray.intersectPlane(pTop, hitP)) for (const ch of chips) if (ch.on > .5 && Math.abs(hitP.x - ch.x) < CW / 2 + .3 && Math.abs(hitP.z - ch.z) < CD / 2 + .3) return { chip: ch };
+    if (ray.ray.intersectPlane(pComp, hitP)) { let best = -1, bd = 1.1; comps.forEach((cp, i) => { const d = Math.max(Math.abs(hitP.x - cp.x) - .3, Math.abs(hitP.z - cp.z)); if (d < bd) { bd = d; best = i; } }); if (best >= 0) return { comp: best }; }
+    return {};
   }
   function showTip(e, html) { const r = host.getBoundingClientRect(); tip.innerHTML = html; tip.hidden = false; tip.style.transform = `translate(${Math.min(e.clientX - r.left + 16, r.width - 270)}px, ${e.clientY - r.top + 16}px)`; }
   let down = null;
+  let lastEv = null, dragging = false;
   function onMove(e) {
     if (ambient) { pointer.tx = (e.clientX / innerWidth - .5); pointer.ty = (e.clientY / innerHeight - .5); wake(); return; }
+    if (e.buttons || dragging) { if (hover) { hover = null; tip.hidden = true; } return; }   // a arrastar: nada de picking nem tooltip
+    lastEv = { clientX: e.clientX, clientY: e.clientY }; wake();
+  }
+  function doHover(e) {
     const p = pickAt(e); const ch = p.chip || (p.comp != null ? comps[p.comp].ch : null);
     hover = ch; hoverComp = p.comp != null ? p.comp : -1; canvas.style.cursor = ch ? 'pointer' : 'grab';
     if (p.comp != null) { const cp = comps[p.comp]; showTip(e, `<b>${esc(topicName(cp.ch.c, cp.j))}</b><span>${esc(name(cp.ch.c))}</span>`); }
     else if (ch) showTip(e, `<b>${esc(name(ch.c))}</b><span>${pct(ch.c)}% · ${ch.c.topics.length} ${api.lang === 'en' ? 'topics' : 'tópicos'}</span>`);
     else tip.hidden = true;
-    wake();
   }
   function onDown(e) { down = [e.clientX, e.clientY]; }
   function onUp(e) {
@@ -312,7 +319,7 @@ function mount(host, api) {
   }
 
   /* ---------- loop ---------- */
-  let raf = 0, running = true, visible = true, scrollK = 0, idleUntil = 0, lastDraw = 0, ftAvg = 16, ftN = 0;
+  let dead = false, raf = 0, running = true, visible = true, scrollK = 0, idleUntil = 0, lastDraw = 0, ftAvg = 16, ftN = 0;
   function degrade() {
     Qlev--; ftN = 0; ftAvg = 16; try { localStorage.setItem('eia.gl', String(Qlev)); } catch (e) { }
     renderer.setPixelRatio(dprFor(Qlev));
@@ -322,10 +329,10 @@ function mount(host, api) {
   const T0 = performance.now();
   function wake() { idleUntil = performance.now() + 1500; if (!raf && running && visible) raf = requestAnimationFrame(frame); }
   function frame(now) {
-    raf = 0;
+    raf = 0; if (!running || dead) return;
     if (ambient && !intro && now - lastDraw < 30) { if (running && visible) raf = requestAnimationFrame(frame); return; }   // fundo animado: ~30 imagens por segundo chegam
     const dt = now - lastDraw; lastDraw = now;
-    if (dt < 250) { ftAvg = ftAvg * .92 + dt * .08; if (++ftN > 45 && Qlev > 0 && ftAvg > (ambient ? 48 : 30)) degrade(); }
+    if (dt < 250) { ftAvg = ftAvg * .92 + dt * .08; if (++ftN > 30 && Qlev > 0 && ftAvg > (ambient ? 48 : 24)) degrade(); }
     const t = (now - T0) / 1000;
     traceMat.uniforms.uTime.value = reduced ? 0 : t;
     if (intro) {
@@ -343,6 +350,7 @@ function mount(host, api) {
       const u = clamp((now - fly.t0) / fly.dur, 0, 1), k = ease(u);
       controls.target.lerpVectors(fly.from.t, fly.to.t, k); camera.position.lerpVectors(fly.from.p, fly.to.p, k); if (u >= 1) fly = null;
     }
+    if (lastEv) { doHover(lastEv); lastEv = null; }
     const moved = controls ? controls.update() : false;
     // chips: lift on hover / focus, glow from progress, power-on during intro
     let moving = false;
@@ -352,18 +360,19 @@ function mount(host, api) {
       ch.liftG.position.y = ch.lift; ch.shadow.material.opacity = .9; ch.shadow.scale.setScalar(1 + ch.lift * .06);
       ch.liftG.visible = ch.on > .02; ch.liftG.scale.setScalar(.85 + .15 * ch.on);
       const dim = focusId && ch.id !== focusId ? .35 : 1;
-      ch.top.material.opacity = ch.on * dim; ch.halo.material.opacity = ((ch.haloBase || 0) * (reduced ? 1 : (.85 + .15 * Math.sin(t * 2 + ch.i))) + (ch.flash || 0) * .8) * ch.on;
+      ch.top.material.opacity = ch.on * dim; ch.halo.material.opacity = ((ch.haloBase || 0) * (reduced ? 1 : (.85 + .15 * Math.sin(t * 2 + ch.i))) + (ch.flash || 0) * .8) * ch.on; ch.halo.visible = ch.halo.material.opacity > .01;
       ch.led.material.opacity = ch.on;
     });
-    if (moving || hover) { placePins(); placeComps(); }
-    if (composer) composer.render(); else renderer.render(scene, camera);
+    if (moving) { placePins(); placeComps(); }
+    if (composer && !dragging) composer.render(); else renderer.render(scene, camera);
     const animate = !reduced && (ambient || intro || fly || moving || moved || now < idleUntil);
     if (animate && running && visible) raf = requestAnimationFrame(frame);
   }
 
-  const ro = new ResizeObserver(resize); ro.observe(host);
+  let rzRaf = 0, lastWH = '';
+  const ro = new ResizeObserver(() => { if (rzRaf) return; rzRaf = requestAnimationFrame(() => { rzRaf = 0; const r = host.getBoundingClientRect(), k = Math.round(r.width) + 'x' + Math.round(r.height / 24); if (k !== lastWH) { lastWH = k; resize(); } }); }); ro.observe(host);
   const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) wake(); }); io.observe(host);
-  const onVis = () => { running = !document.hidden; if (running) wake(); }; document.addEventListener('visibilitychange', onVis);
+  const onVis = () => { if (dead) return; running = !document.hidden; if (running) wake(); }; document.addEventListener('visibilitychange', onVis);
   resize(); if (!ambient) { setFromPose(); if (focusId) focus(focusId); } wake();
 
   return {
@@ -373,10 +382,10 @@ function mount(host, api) {
     reset: () => { if (!controls) return; focus(null); onPick(null); controls.userMoved = false; const d = fitDist(); const dir = new THREE.Vector3(Math.sin(pose.theta) * Math.cos(pose.phi), Math.sin(pose.phi), Math.cos(pose.theta) * Math.cos(pose.phi)); flyTo(center.clone(), d); fly && (fly.to.p = center.clone().add(dir.multiplyScalar(d))); },
     setScroll: k => { scrollK = k; wake(); },
     destroy: () => {
-      running = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); removeEventListener('pointermove', onMove);
+      dead = true; running = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); removeEventListener('pointermove', onMove);
       if (intro) endIntro(); if (controls) controls.dispose();
       scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } });
-      if (composer) composer.dispose(); renderer.dispose(); canvas.remove(); tip.remove();
+      if (composer) composer.dispose(); renderer.dispose(); renderer.forceContextLoss(); cancelAnimationFrame(rzRaf); canvas.remove(); tip.remove();
       if (heroWrap) heroWrap.querySelectorAll('.letterbox,.intro-skip').forEach(n => n.remove());
     }
   };
