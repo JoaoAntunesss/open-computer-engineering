@@ -54,6 +54,9 @@ h3 { font-weight: 650; font-size: 21px; line-height: 1.25; letter-spacing: -.01e
 .nav a:hover { color: var(--ink); background: var(--deep2); text-decoration: none; }
 .nav a.on { color: var(--ink); background: var(--deep2); }
 .lang { height: 36px; padding: 0 10px; border: 0; background: transparent; color: var(--ink2); font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 2px; }
+.auth { display: inline-flex; align-items: center; gap: 6px; }
+.auth img { width: 22px; height: 22px; border-radius: 50%; }
+.auth[data-sync="err"]::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--fire); }
 .lang:hover { background: var(--deep2); color: var(--ink); }
 .nav-cta { height: 40px; padding: 0 18px; font-size: 15px; }
 
@@ -411,6 +414,7 @@ table.unis code { font: 500 13.5px var(--mono); color: var(--cold); margin-right
   .nav { order: 3; width: 100%; margin: 0; justify-content: space-between; }
   .nav a { flex: 1; text-align: center; padding: 8px 4px; font-size: 14px; }
   .lang { margin-left: auto; }
+  .auth:not([hidden]) + .lang { margin-left: 0; }
   .nav-cta { height: 36px; padding: 0 14px; font-size: 14px; }
   .readbar { top: 104px; }
   .hero-net { min-height: 640px; align-items: flex-start; flex-direction: column; justify-content: flex-end; background: radial-gradient(90% 55% at 50% 30%, #0d1736 0%, var(--night) 75%); }

@@ -5,7 +5,7 @@ const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => Arr
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } try { document.dispatchEvent(new CustomEvent('eia:saved', { detail: k })); } catch (e) { } }
 };
 const COURSES = window.COURSES, SEMS = window.SEMS, AREAS = window.AREAS, UNIS = window.UNIS, LESSONS = window.LESSONS || {};
 const BY = Object.fromEntries(COURSES.map(c => [c.id, c]));
@@ -692,6 +692,8 @@ window.addEventListener('hashchange', () => {
   lastPage = pg;
   go(() => { render(); if (!same) window.scrollTo(0, 0); });
 });
+// Progresso que chegou da conta Google (js/sync.js): relê e redesenha.
+document.addEventListener('eia:remote', () => { P = store.get('eia.progress', {}); render(); chrome(); });
 $('#langBtn').onclick = () => { L = L === 'pt' ? 'en' : 'pt'; store.set('eia.lang', L); go(render); };
 lastPage = page(); render();
 })();

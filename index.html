@@ -33,6 +33,7 @@
     <a href="#/plano" data-nav="plan" id="navPlan">Plano</a>
     <a href="#/sobre" data-nav="about" id="navAbout">Sobre</a>
   </nav>
+  <button class="lang auth" id="authBtn" type="button" hidden>Entrar</button>
   <button class="lang" id="langBtn" type="button" aria-label="Mudar língua / Change language">EN</button>
   <a class="btn-fire nav-cta" id="contBtn" href="#/">Continuar</a>
 </header>
@@ -47,6 +48,8 @@
 <script src="js/tools.js"></script>
 <script src="js/placa-svg.js"></script>
 <script src="js/app.js"></script>
+<script src="js/firebase-config.js"></script>
+<script type="module" src="js/sync.js"></script>
 <script type="module">
 // Por omissão a placa é SVG: leve e fluida em qualquer aparelho. A versão 3D só carrega se a escolheres (botão «3D»).
 const want3d = (() => { try { return localStorage.getItem('eia.3d') === '1'; } catch (e) { return false; } })();
