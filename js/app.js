@@ -260,7 +260,7 @@ function trail() {
 }
 function viewHome() {
   return `<section class="hero-net"><div class="hero-canvas" id="heroNet"></div><div class="hero-copy rise"><h1>${t('homeT')}</h1><p class="lead">${t('homeP')}</p></div></section>
-  ${nextPanel()}${howStrip()}${statsStrip()}${trail()}`;
+  ${nextPanel()}${planHomeCard()}${howStrip()}${statsStrip()}${trail()}`;
 }
 function bindHome() {
   $$('.phase-toggle').forEach(b => b.onclick = () => {
@@ -494,6 +494,117 @@ function bindNet() {
   bindInspector();
 }
 
+/* ---------- study plan: choose when you start and how long you want to take; the site lays out every week ---------- */
+const PL = () => L === 'pt';
+const PLAN_KEY = 'eia.plan';
+const SCOPES = { lic: ['A1S1', 'A1S2', 'A2S1', 'A2S2', 'A3S1', 'A3S2'], adv: ['ADV'], pro: ['JR', 'SR'] };
+const isoDay = d => { const x = new Date(d); x.setHours(12, 0, 0, 0); return x.toISOString().slice(0, 10); };
+const monday = d => { const x = new Date(d); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const fmtD = (d, o) => new Date(d).toLocaleDateString(L === 'pt' ? 'pt-PT' : 'en-GB', o || { day: 'numeric', month: 'short' });
+function planDefaults() { const s = new Date(); return { start: isoDay(s), years: 3, scope: { lic: true, adv: false, pro: false }, holidays: true }; }
+const loadPlan = () => store.get(PLAN_KEY, null);
+const savePlan = p => store.set(PLAN_KEY, p);
+// estimated hours: a topic (reading + exercises) and a hands-on task, harder courses take longer
+const itemHours = (c, kind) => (kind === 't' ? 4 : 5) * (0.7 + 0.15 * (c.diff || 3));
+function planItems(cfg) {
+  const sems = [].concat(...Object.entries(SCOPES).filter(([k]) => cfg.scope[k]).map(([, v]) => v));
+  return sems.map(sid => ({ sem: sid, items: [].concat(...COURSES.filter(c => c.sem === sid).map(c => c.topics.map((_, j) => ({ c, kind: 't', j, h: itemHours(c, 't') })).concat(c.tasks.map((_, j) => ({ c, kind: 'k', j, h: itemHours(c, 'k') }))))) })).filter(b => b.items.length);
+}
+function isHoliday(wk) { // August, and the Christmas week up to the 1st of January
+  for (let i = 0; i < 7; i++) { const d = addDays(wk, i), m = d.getMonth(), dd = d.getDate(); if (i < 5 && m === 7) return true; if ((m === 11 && dd >= 24) || (m === 0 && dd === 1)) return true; }
+  return false;
+}
+function buildPlan(cfg) {
+  const start = monday(cfg.start), endD = addDays(new Date(cfg.start), Math.round(cfg.years * 365.25));
+  const weeks = []; for (let w = new Date(start); w < endD; w = addDays(w, 7)) if (!cfg.holidays || !isHoliday(w)) weeks.push(new Date(w));
+  const blocks = planItems(cfg), total = blocks.reduce((a, b) => a + b.items.reduce((s, i) => s + i.h, 0), 0) || 1;
+  const out = weeks.map(w => ({ w, items: [], sem: null, h: 0 }));
+  let wi = 0;
+  blocks.forEach((b, bi) => {
+    const bh = b.items.reduce((s, i) => s + i.h, 0);
+    const n = bi === blocks.length - 1 ? weeks.length - wi : Math.max(1, Math.round(weeks.length * bh / total));
+    const first = wi, count = Math.max(1, Math.min(n, weeks.length - wi));
+    // the courses of a semester run side by side, each spread evenly over the semester's weeks
+    const byC = {}; b.items.forEach(i => (byC[i.c.id] = byC[i.c.id] || []).push(i));
+    // interleave the courses (each item at its relative place in its course), then fill the weeks evenly by hours
+    const mixed = [].concat(...Object.values(byC).map(list => list.map((it, k) => ({ it, pos: (k + .5) / list.length })))).sort((x, y) => x.pos - y.pos);
+    let cum = 0; mixed.forEach(({ it }) => { const at = first + Math.min(count - 1, Math.floor((cum + it.h / 2) / bh * count)); cum += it.h; if (out[at]) { out[at].items.push(it); out[at].h += it.h; } });
+    for (let k = first; k < first + count && k < out.length; k++) out[k].sem = b.sem;
+    wi += count;
+  });
+  return { cfg, weeks: out, totalH: total, hpw: total / Math.max(1, weeks.length), end: weeks.length ? addDays(weeks[weeks.length - 1], 6) : endD };
+}
+const itemDone = it => it.kind === 't' ? doneTopic(it.c.id, it.j) : !!(P[it.c.id] && P[it.c.id].k.includes(it.j));
+const itemTitle = it => half(it.kind === 't' ? it.c.topics[it.j] : it.c.tasks[it.j]);
+const itemHref = it => it.kind === 't' ? `#/l/${it.c.id}/${it.j + 1}` : `#/c/${it.c.id}`;
+function planStatus(pl) {
+  const now = Date.now(); let due = 0, done = 0, all = 0;
+  pl.weeks.forEach(w => w.items.forEach(it => { all++; if (itemDone(it)) done++; if (addDays(w.w, 7) <= now) due++; }));
+  const perWeek = all / Math.max(1, pl.weeks.length), diff = Math.round((done - due) / Math.max(1, perWeek));
+  return { due, done, all, diff };
+}
+function viewPlan() {
+  const saved = loadPlan(), cfg = saved || planDefaults();
+  const scopeBox = (k, pt, en) => `<label class="pl-chk"><input type="checkbox" data-scope="${k}" ${cfg.scope[k] ? 'checked' : ''}> ${PL() ? pt : en}</label>`;
+  const years = [[1, '1 ano', '1 year'], [1.5, '18 meses', '18 months'], [2, '2 anos', '2 years'], [3, '3 anos', '3 years'], [4, '4 anos', '4 years'], [5, '5 anos', '5 years']];
+  const form = `<form class="panel pl-form" id="plForm">
+    <label><span>${PL() ? 'Começo a' : 'I start on'}</span><input type="date" id="plStart" value="${esc(cfg.start)}" required></label>
+    <label><span>${PL() ? 'Quero acabar em' : 'I want to finish in'}</span><select id="plYears">${years.map(([v, pt, en]) => `<option value="${v}" ${+cfg.years === v ? 'selected' : ''}>${PL() ? pt : en}</option>`).join('')}</select></label>
+    <fieldset><legend>${PL() ? 'O que entra no plano' : 'What goes in the plan'}</legend>${scopeBox('lic', 'Licenciatura (3 anos)', 'Degree (3 years)')}${scopeBox('adv', 'Avançado (mestrado)', 'Advanced (master’s)')}${scopeBox('pro', 'Depois do curso (júnior e sénior)', 'After the degree (junior and senior)')}</fieldset>
+    <label class="pl-chk"><input type="checkbox" id="plHol" ${cfg.holidays ? 'checked' : ''}> ${PL() ? 'Férias em agosto e no Natal' : 'Holidays in August and at Christmas'}</label>
+    <p class="pl-est" id="plEst"></p>
+    <div class="pl-actions"><button class="btn-fire" type="submit">${saved ? (PL() ? 'Atualizar o plano' : 'Update the plan') : (PL() ? 'Criar o meu plano' : 'Create my plan')}</button>${saved ? `<button class="btn" type="button" id="plToday">${PL() ? 'Replanear a partir de hoje' : 'Replan from today'}</button><button class="btn" type="button" id="plIcs">${PL() ? 'Adicionar ao calendário (.ics)' : 'Add to calendar (.ics)'}</button><button class="btn" type="button" id="plDel">${PL() ? 'Apagar plano' : 'Delete plan'}</button>` : ''}</div>
+  </form>`;
+  return `<section class="page-head rise"><h1>${PL() ? 'O meu plano de estudo' : 'My study plan'}</h1><p class="lead">${PL() ? 'Escolhe quando começas e em quanto tempo queres acabar. O site distribui as cadeiras pelas semanas, com as do mesmo semestre em paralelo, como numa universidade, e diz-te o que fazer em cada semana.' : 'Choose when you start and how long you want to take. The site spreads the courses over the weeks, with each semester’s courses side by side as at a university, and tells you what to do each week.'}</p></section>
+  <div class="pl-grid rise">${form}<div id="plOut">${saved ? planHTML(buildPlan(saved)) : ''}</div></div>`;
+}
+function planHTML(pl) {
+  const st = planStatus(pl), now = new Date(), cur = pl.weeks.findIndex(w => w.w <= now && addDays(w.w, 7) > now);
+  const semName = id => { const s = SEMS.find(x => x.id === id); return s ? s[L] : ''; };
+  const pace = st.diff > 0 ? (PL() ? `Estás <b>${st.diff} semana${st.diff > 1 ? 's' : ''} adiantado</b>.` : `You are <b>${st.diff} week${st.diff > 1 ? 's' : ''} ahead</b>.`) : st.diff < 0 ? (PL() ? `Estás <b>${-st.diff} semana${st.diff < -1 ? 's' : ''} atrasado</b>. Podes replanear a partir de hoje.` : `You are <b>${-st.diff} week${st.diff < -1 ? 's' : ''} behind</b>. You can replan from today.`) : (PL() ? 'Estás em dia.' : 'You are on track.');
+  const itemLi = it => `<li class="${itemDone(it) ? 'done' : ''}"><a href="${itemHref(it)}"><span>${esc(itemTitle(it))}</span><small>${esc(nm(it.c))}${it.kind === 'k' ? (PL() ? ' · tarefa' : ' · task') : ''}</small></a></li>`;
+  const thisW = cur > -1 ? pl.weeks[cur] : null;
+  const late = pl.weeks.slice(0, Math.max(0, cur)).flatMap(w => w.items).filter(it => !itemDone(it));
+  const head = `<section class="panel pl-sum"><div class="pl-nums"><div><b>${fmtD(pl.weeks[0] ? pl.weeks[0].w : pl.cfg.start, { day: 'numeric', month: 'short', year: 'numeric' })}</b><span>${PL() ? 'início' : 'start'}</span></div><div><b>${fmtD(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}</b><span>${PL() ? 'fim' : 'end'}</span></div><div><b>${Math.round(pl.hpw)} h</b><span>${PL() ? 'por semana (estimativa)' : 'per week (estimate)'}</span></div><div><b>${st.done}/${st.all}</b><span>${PL() ? 'feitos' : 'done'}</span></div></div>
+    <p>${pace}${pl.hpw > 25 ? (PL() ? ' Este ritmo é de tempo inteiro: se trabalhas, escolhe mais tempo.' : ' This pace is full time: if you work, choose a longer plan.') : ''}</p>
+    <div class="pl-bar" aria-hidden="true">${(() => { const segs = []; pl.weeks.forEach(w => { const l = segs[segs.length - 1]; if (l && l.sem === w.sem) l.n++; else segs.push({ sem: w.sem, n: 1 }); }); return segs.map(s => `<i style="flex:${s.n}" title="${esc(semName(s.sem))}"><span>${esc(semName(s.sem))}</span></i>`).join(''); })()}<em style="left:${cur > -1 ? (cur + .5) / pl.weeks.length * 100 : 0}%"></em></div></section>`;
+  const now1 = thisW ? `<section class="panel pl-now"><h2>${PL() ? 'Esta semana' : 'This week'} <small>${fmtD(thisW.w)} – ${fmtD(addDays(thisW.w, 6))} · ${semName(thisW.sem)}</small></h2>${thisW.items.length ? `<ol class="pl-items">${thisW.items.map(itemLi).join('')}</ol>` : `<p class="mut">${PL() ? 'Nada marcado para esta semana.' : 'Nothing planned this week.'}</p>`}${late.length ? `<h3>${PL() ? 'Em atraso' : 'Behind'} (${late.length})</h3><ol class="pl-items">${late.slice(0, 8).map(itemLi).join('')}</ol>${late.length > 8 ? `<p class="mut">+${late.length - 8}</p>` : ''}` : ''}</section>` : '';
+  // the calendar: one row per week, grouped by month
+  let lastM = '', rows = '';
+  pl.weeks.forEach((w, i) => {
+    const m = fmtD(w.w, { month: 'long', year: 'numeric' });
+    if (m !== lastM) { rows += `<h3 class="pl-month">${esc(m)}</h3>`; lastM = m; }
+    const dn = w.items.filter(itemDone).length, cs = [...new Set(w.items.map(it => it.c))];
+    rows += `<details class="pl-week${i === cur ? ' cur' : ''}${w.items.length && dn === w.items.length ? ' ok' : ''}"${i === cur ? ' open' : ''}><summary><span class="pl-wd">${fmtD(w.w)}</span><span class="pl-wc">${cs.map(c => esc(nm(c))).join(' · ') || '—'}</span><span class="pl-wn">${dn}/${w.items.length}</span></summary><ol class="pl-items">${w.items.map(itemLi).join('')}</ol></details>`;
+  });
+  return head + now1 + `<section class="pl-cal" aria-label="${PL() ? 'Calendário' : 'Calendar'}">${rows}</section>`;
+}
+function planIcs(pl) {
+  const d = x => isoDay(x).replace(/-/g, ''), escI = s => String(s).replace(/[\\,;]/g, m => '\\' + m).replace(/\n/g, '\\n');
+  const ev = pl.weeks.filter(w => w.items.length).map((w, i) => ['BEGIN:VEVENT', `UID:eia-${d(w.w)}-${i}@engenharia-informatica-aberta`, `DTSTAMP:${d(new Date())}T000000Z`, `DTSTART;VALUE=DATE:${d(w.w)}`, `DTEND;VALUE=DATE:${d(addDays(w.w, 7))}`,
+    `SUMMARY:${escI((PL() ? 'Estudo: ' : 'Study: ') + [...new Set(w.items.map(it => nm(it.c)))].join(', '))}`,
+    `DESCRIPTION:${escI(w.items.map(it => '- ' + itemTitle(it) + ' (' + nm(it.c) + ')').join('\n') + '\n\n' + location.origin + location.pathname + '#/plano')}`, 'END:VEVENT'].join('\r\n'));
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Engenharia Informatica Aberta//Plano//PT', 'CALSCALE:GREGORIAN', ...ev, 'END:VCALENDAR'].join('\r\n');
+}
+function bindPlan() {
+  const f = $('#plForm'); if (!f) return;
+  const read = () => ({ start: $('#plStart').value || isoDay(new Date()), years: +$('#plYears').value, holidays: $('#plHol').checked, scope: Object.fromEntries($$('[data-scope]', f).map(x => [x.dataset.scope, x.checked])) });
+  const est = () => { const c = read(); if (!Object.values(c.scope).some(Boolean)) { $('#plEst').textContent = PL() ? 'Escolhe pelo menos uma parte.' : 'Pick at least one part.'; return; } const pl = buildPlan(c); $('#plEst').textContent = PL() ? `Cerca de ${Math.round(pl.hpw)} h por semana durante ${pl.weeks.length} semanas (${Math.round(pl.totalH)} h no total).` : `About ${Math.round(pl.hpw)} h a week for ${pl.weeks.length} weeks (${Math.round(pl.totalH)} h in total).`; };
+  f.addEventListener('input', est); est();
+  f.onsubmit = e => { e.preventDefault(); const c = read(); if (!Object.values(c.scope).some(Boolean)) return; savePlan(c); render(); toast(PL() ? 'Plano guardado' : 'Plan saved'); };
+  const td = $('#plToday'); if (td) td.onclick = () => { const c = read(), pl = buildPlan(c), end = pl.end; c.years = Math.max(.25, (end - new Date()) / (365.25 * 864e5)); c.start = isoDay(new Date()); c.replanned = true; savePlan(c); render(); toast(PL() ? 'Plano refeito a partir de hoje, com a mesma data de fim' : 'Plan redone from today, same end date'); };
+  const ic = $('#plIcs'); if (ic) ic.onclick = () => { const blob = new Blob([planIcs(buildPlan(loadPlan()))], { type: 'text/calendar' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = PL() ? 'plano-de-estudo.ics' : 'study-plan.ics'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  const dl = $('#plDel'); if (dl) dl.onclick = () => { if (confirm(PL() ? 'Apagar o plano? O teu progresso fica.' : 'Delete the plan? Your progress stays.')) { store.set(PLAN_KEY, null); render(); } };
+}
+function planHomeCard() {
+  const cfg = loadPlan();
+  if (!cfg) return `<section class="pl-home rise"><p>${PL() ? 'Queres fazer o curso com datas? Escolhe quando começas e em quanto tempo queres acabar, e recebes um plano semana a semana.' : 'Want to do the course with dates? Choose when you start and how long you want to take, and get a week-by-week plan.'}</p><a class="btn" href="#/plano">${PL() ? 'Planear o meu curso' : 'Plan my course'}</a></section>`;
+  const pl = buildPlan(cfg), st = planStatus(pl), now = new Date(), w = pl.weeks.find(x => x.w <= now && addDays(x.w, 7) > now);
+  const left = w ? w.items.filter(it => !itemDone(it)).length : 0;
+  return `<section class="pl-home rise"><p>${PL() ? 'O teu plano' : 'Your plan'}: ${w ? (PL() ? `esta semana faltam <b>${left}</b> de ${w.items.length}.` : `<b>${left}</b> of ${w.items.length} left this week.`) : (PL() ? 'sem nada para esta semana.' : 'nothing this week.')} ${st.diff < 0 ? (PL() ? `Estás ${-st.diff} semana(s) atrasado.` : `${-st.diff} week(s) behind.`) : st.diff > 0 ? (PL() ? `Estás ${st.diff} semana(s) adiantado.` : `${st.diff} week(s) ahead.`) : (PL() ? 'Estás em dia.' : 'On track.')}</p><a class="btn" href="#/plano">${PL() ? 'Ver o plano' : 'See the plan'}</a></section>`;
+}
+
 /* ---------- about ---------- */
 function viewAbout() {
   const src = UNIS.map(u => `<li><a href="${esc(u.src)}" target="_blank" rel="noopener">${esc(u.full)}</a></li>`).join('');
@@ -526,7 +637,7 @@ function bindAbout() {
 function chrome() {
   document.documentElement.lang = L;
   $('#brandName').textContent = t('brand');
-  $('#navHome').textContent = t('home'); $('#navNet').textContent = t('net'); $('#navCat').textContent = t('cat'); $('#navAbout').textContent = t('about');
+  $('#navHome').textContent = t('home'); $('#navNet').textContent = t('net'); $('#navCat').textContent = t('cat'); $('#navPlan').textContent = L === 'pt' ? 'Plano' : 'Plan'; $('#navAbout').textContent = t('about');
   const ns = nextStep(), cb = $('#contBtn'); cb.href = ns ? ns.href : '#/'; cb.textContent = totals()[0] === 0 ? t('start') : t('cont');
   $('#langBtn').textContent = L === 'pt' ? 'EN' : 'PT';
   $('#foot').innerHTML = `<p class="close">${esc(t('closeT'))}</p><p>${esc(t('foot'))}</p>`;
@@ -543,6 +654,7 @@ function render() {
   else if (seg[0] === 'rede' || seg[0] === 'network') { app.innerHTML = viewNet(seg[1]); bindNet(); nav = 'net'; title = t('netT'); }
   else if (seg[0] === 'cadeiras' || seg[0] === 'courses') { app.innerHTML = viewCatalog(); bindCatalog(); nav = 'cat'; title = t('catT2'); }
   else if (seg[0] === 'mapa' || seg[0] === 'map') { app.innerHTML = viewMap(seg[1]); bindMap(); nav = 'cat'; title = t('mapT'); }
+  else if (seg[0] === 'plano' || seg[0] === 'plan') { app.innerHTML = viewPlan(); bindPlan(); nav = 'plan'; title = L === 'pt' ? 'O meu plano' : 'My plan'; }
   else if (seg[0] === 'sobre' || seg[0] === 'about') { app.innerHTML = viewAbout(); bindAbout(); nav = 'about'; title = t('aboutT'); }
   else { app.innerHTML = viewHome(); bindHome(); }
   document.title = (title ? title + ' — ' : '') + t('brand');
