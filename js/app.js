@@ -516,9 +516,15 @@ function isHoliday(wk) { // August, and the Christmas week up to the 1st of Janu
   return false;
 }
 function buildPlan(cfg) {
-  const start = monday(cfg.start), endD = addDays(new Date(cfg.start), Math.round(cfg.years * 365.25));
-  const weeks = []; for (let w = new Date(start); w < endD; w = addDays(w, 7)) if (!cfg.holidays || !isHoliday(w)) weeks.push(new Date(w));
-  const blocks = planItems(cfg), total = blocks.reduce((a, b) => a + b.items.reduce((s, i) => s + i.h, 0), 0) || 1;
+  const start = monday(cfg.start), blocks = planItems(cfg), total = blocks.reduce((a, b) => a + b.items.reduce((s, i) => s + i.h, 0), 0) || 1;
+  const weeks = [];
+  if (cfg.mode === 'pace') { // as many weeks as the hours need, at the chosen pace
+    const need = Math.max(1, Math.ceil(total / Math.max(1, (+cfg.hpd || 2) * (+cfg.dpw || 5))));
+    for (let w = new Date(start); weeks.length < need; w = addDays(w, 7)) if (!cfg.holidays || !isHoliday(w)) weeks.push(new Date(w));
+  } else {
+    const endD = addDays(new Date(cfg.start), Math.round(cfg.years * 365.25));
+    for (let w = new Date(start); w < endD; w = addDays(w, 7)) if (!cfg.holidays || !isHoliday(w)) weeks.push(new Date(w));
+  }
   const out = weeks.map(w => ({ w, items: [], sem: null, h: 0 }));
   let wi = 0;
   blocks.forEach((b, bi) => {
@@ -533,7 +539,7 @@ function buildPlan(cfg) {
     for (let k = first; k < first + count && k < out.length; k++) out[k].sem = b.sem;
     wi += count;
   });
-  return { cfg, weeks: out, totalH: total, hpw: total / Math.max(1, weeks.length), end: weeks.length ? addDays(weeks[weeks.length - 1], 6) : endD };
+  return { cfg, weeks: out, totalH: total, hpw: total / Math.max(1, weeks.length), end: weeks.length ? addDays(weeks[weeks.length - 1], 6) : new Date(cfg.start) };
 }
 const itemDone = it => it.kind === 't' ? doneTopic(it.c.id, it.j) : !!(P[it.c.id] && P[it.c.id].k.includes(it.j));
 const itemTitle = it => half(it.kind === 't' ? it.c.topics[it.j] : it.c.tasks[it.j]);
@@ -550,7 +556,13 @@ function viewPlan() {
   const years = [[1, '1 ano', '1 year'], [1.5, '18 meses', '18 months'], [2, '2 anos', '2 years'], [3, '3 anos', '3 years'], [4, '4 anos', '4 years'], [5, '5 anos', '5 years']];
   const form = `<form class="panel pl-form" id="plForm">
     <label><span>${PL() ? 'Começo a' : 'I start on'}</span><input type="date" id="plStart" value="${esc(cfg.start)}" required></label>
-    <label><span>${PL() ? 'Quero acabar em' : 'I want to finish in'}</span><select id="plYears">${years.map(([v, pt, en]) => `<option value="${v}" ${+cfg.years === v ? 'selected' : ''}>${PL() ? pt : en}</option>`).join('')}</select></label>
+    <fieldset class="pl-mode"><legend>${PL() ? 'Como queres planear' : 'How do you want to plan'}</legend>
+      <label class="pl-chk"><input type="radio" name="plMode" value="time" ${cfg.mode !== 'pace' ? 'checked' : ''}> ${PL() ? 'Pela data em que quero acabar' : 'By when I want to finish'}</label>
+      <label class="pl-chk"><input type="radio" name="plMode" value="pace" ${cfg.mode === 'pace' ? 'checked' : ''}> ${PL() ? 'Pelas horas que tenho por dia' : 'By the hours I have each day'}</label></fieldset>
+    <label data-for="time"${cfg.mode === 'pace' ? ' hidden' : ''}><span>${PL() ? 'Quero acabar em' : 'I want to finish in'}</span><select id="plYears">${years.map(([v, pt, en]) => `<option value="${v}" ${+cfg.years === v ? 'selected' : ''}>${PL() ? pt : en}</option>`).join('')}</select></label>
+    <div class="pl-pace" data-for="pace"${cfg.mode === 'pace' ? '' : ' hidden'}>
+      <label><span>${PL() ? 'Horas por dia' : 'Hours a day'}</span><select id="plHpd">${[1, 2, 3, 4, 5, 6, 8, 10].map(h => `<option value="${h}" ${(+cfg.hpd || 2) === h ? 'selected' : ''}>${h} h</option>`).join('')}</select></label>
+      <label><span>${PL() ? 'Dias por semana' : 'Days a week'}</span><select id="plDpw">${[3, 4, 5, 6, 7].map(d => `<option value="${d}" ${(+cfg.dpw || 5) === d ? 'selected' : ''}>${d}</option>`).join('')}</select></label></div>
     <fieldset><legend>${PL() ? 'O que entra no plano' : 'What goes in the plan'}</legend>${scopeBox('lic', 'Licenciatura (3 anos)', 'Degree (3 years)')}${scopeBox('adv', 'Avançado (mestrado)', 'Advanced (master’s)')}${scopeBox('pro', 'Depois do curso (júnior e sénior)', 'After the degree (junior and senior)')}</fieldset>
     <label class="pl-chk"><input type="checkbox" id="plHol" ${cfg.holidays ? 'checked' : ''}> ${PL() ? 'Férias em agosto e no Natal' : 'Holidays in August and at Christmas'}</label>
     <p class="pl-est" id="plEst"></p>
@@ -567,7 +579,7 @@ function planHTML(pl) {
   const thisW = cur > -1 ? pl.weeks[cur] : null;
   const late = pl.weeks.slice(0, Math.max(0, cur)).flatMap(w => w.items).filter(it => !itemDone(it));
   const head = `<section class="panel pl-sum"><div class="pl-nums"><div><b>${fmtD(pl.weeks[0] ? pl.weeks[0].w : pl.cfg.start, { day: 'numeric', month: 'short', year: 'numeric' })}</b><span>${PL() ? 'início' : 'start'}</span></div><div><b>${fmtD(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}</b><span>${PL() ? 'fim' : 'end'}</span></div><div><b>${Math.round(pl.hpw)} h</b><span>${PL() ? 'por semana (estimativa)' : 'per week (estimate)'}</span></div><div><b>${st.done}/${st.all}</b><span>${PL() ? 'feitos' : 'done'}</span></div></div>
-    <p>${pace}${pl.hpw > 25 ? (PL() ? ' Este ritmo é de tempo inteiro: se trabalhas, escolhe mais tempo.' : ' This pace is full time: if you work, choose a longer plan.') : ''}</p>
+    <p>${pace}${pl.cfg.mode !== 'pace' && pl.hpw > 25 ? (PL() ? ' Este ritmo é de tempo inteiro: se trabalhas, escolhe mais tempo.' : ' This pace is full time: if you work, choose a longer plan.') : ''}</p>
     <div class="pl-bar" aria-hidden="true">${(() => { const segs = []; pl.weeks.forEach(w => { const l = segs[segs.length - 1]; if (l && l.sem === w.sem) l.n++; else segs.push({ sem: w.sem, n: 1 }); }); return segs.map(s => `<i style="flex:${s.n}" title="${esc(semName(s.sem))}"><span>${esc(semName(s.sem))}</span></i>`).join(''); })()}<em style="left:${cur > -1 ? (cur + .5) / pl.weeks.length * 100 : 0}%"></em></div></section>`;
   const now1 = thisW ? `<section class="panel pl-now"><h2>${PL() ? 'Esta semana' : 'This week'} <small>${fmtD(thisW.w)} – ${fmtD(addDays(thisW.w, 6))} · ${semName(thisW.sem)}</small></h2>${thisW.items.length ? `<ol class="pl-items">${thisW.items.map(itemLi).join('')}</ol>` : `<p class="mut">${PL() ? 'Nada marcado para esta semana.' : 'Nothing planned this week.'}</p>`}${late.length ? `<h3>${PL() ? 'Em atraso' : 'Behind'} (${late.length})</h3><ol class="pl-items">${late.slice(0, 8).map(itemLi).join('')}</ol>${late.length > 8 ? `<p class="mut">+${late.length - 8}</p>` : ''}` : ''}</section>` : '';
   // the calendar: one row per week, grouped by month
@@ -589,11 +601,17 @@ function planIcs(pl) {
 }
 function bindPlan() {
   const f = $('#plForm'); if (!f) return;
-  const read = () => ({ start: $('#plStart').value || isoDay(new Date()), years: +$('#plYears').value, holidays: $('#plHol').checked, scope: Object.fromEntries($$('[data-scope]', f).map(x => [x.dataset.scope, x.checked])) });
-  const est = () => { const c = read(); if (!Object.values(c.scope).some(Boolean)) { $('#plEst').textContent = PL() ? 'Escolhe pelo menos uma parte.' : 'Pick at least one part.'; return; } const pl = buildPlan(c); $('#plEst').textContent = PL() ? `Cerca de ${Math.round(pl.hpw)} h por semana durante ${pl.weeks.length} semanas (${Math.round(pl.totalH)} h no total).` : `About ${Math.round(pl.hpw)} h a week for ${pl.weeks.length} weeks (${Math.round(pl.totalH)} h in total).`; };
+  const mode = () => (($('[name=plMode]:checked', f) || {}).value) || 'time';
+  const read = () => ({ start: $('#plStart').value || isoDay(new Date()), mode: mode(), years: +$('#plYears').value, hpd: +$('#plHpd').value, dpw: +$('#plDpw').value, holidays: $('#plHol').checked, scope: Object.fromEntries($$('[data-scope]', f).map(x => [x.dataset.scope, x.checked])) });
+  const showMode = () => $$('[data-for]', f).forEach(x => { x.hidden = x.dataset.for !== mode(); });
+  $$('[name=plMode]', f).forEach(x => x.addEventListener('change', showMode));
+  const est = () => { const c = read(); if (!Object.values(c.scope).some(Boolean)) { $('#plEst').textContent = PL() ? 'Escolhe pelo menos uma parte.' : 'Pick at least one part.'; return; } const pl = buildPlan(c), fim = fmtD(pl.end, { month: 'long', year: 'numeric' });
+    $('#plEst').textContent = c.mode === 'pace'
+      ? (PL() ? `A ${c.hpd} h por dia, ${c.dpw} dias por semana, acabas em ${fim} (${pl.weeks.length} semanas, ${Math.round(pl.totalH)} h no total).` : `At ${c.hpd} h a day, ${c.dpw} days a week, you finish in ${fim} (${pl.weeks.length} weeks, ${Math.round(pl.totalH)} h in total).`)
+      : (PL() ? `Cerca de ${Math.round(pl.hpw)} h por semana durante ${pl.weeks.length} semanas (${Math.round(pl.totalH)} h no total).` : `About ${Math.round(pl.hpw)} h a week for ${pl.weeks.length} weeks (${Math.round(pl.totalH)} h in total).`); };
   f.addEventListener('input', est); est();
   f.onsubmit = e => { e.preventDefault(); const c = read(); if (!Object.values(c.scope).some(Boolean)) return; savePlan(c); render(); toast(PL() ? 'Plano guardado' : 'Plan saved'); };
-  const td = $('#plToday'); if (td) td.onclick = () => { const c = read(), pl = buildPlan(c), end = pl.end; c.years = Math.max(.25, (end - new Date()) / (365.25 * 864e5)); c.start = isoDay(new Date()); c.replanned = true; savePlan(c); render(); toast(PL() ? 'Plano refeito a partir de hoje, com a mesma data de fim' : 'Plan redone from today, same end date'); };
+  const td = $('#plToday'); if (td) td.onclick = () => { const c = read(), pl = buildPlan(c), end = pl.end; if (c.mode === 'pace') { c.start = isoDay(new Date()); savePlan(c); render(); toast(PL() ? 'Plano refeito a partir de hoje, ao mesmo ritmo' : 'Plan redone from today, same pace'); return; } c.years = Math.max(.25, (end - new Date()) / (365.25 * 864e5)); c.start = isoDay(new Date()); c.replanned = true; savePlan(c); render(); toast(PL() ? 'Plano refeito a partir de hoje, com a mesma data de fim' : 'Plan redone from today, same end date'); };
   const ic = $('#plIcs'); if (ic) ic.onclick = () => { const blob = new Blob([planIcs(buildPlan(loadPlan()))], { type: 'text/calendar' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = PL() ? 'plano-de-estudo.ics' : 'study-plan.ics'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
   const dl = $('#plDel'); if (dl) dl.onclick = () => { if (confirm(PL() ? 'Apagar o plano? O teu progresso fica.' : 'Delete the plan? Your progress stays.')) { store.set(PLAN_KEY, null); render(); } };
 }

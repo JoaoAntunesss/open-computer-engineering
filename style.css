@@ -626,3 +626,5 @@ a.tool:hover, a.tool:focus-visible { border-color: var(--cold); color: #fff; }
 .pl-home p { margin: 0; color: var(--ink2); max-width: 70ch; }
 .pl-home p b { color: var(--fire); }
 .pl-grid > * { min-width: 0; }
+.pl-pace { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pl-pace[hidden], .pl-form [data-for][hidden] { display: none; }
