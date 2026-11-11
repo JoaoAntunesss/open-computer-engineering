@@ -43,11 +43,14 @@
 <script src="js/data4.js"></script>
 <script src="js/data5.js"></script>
 <script src="js/lessons.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/placa-svg.js"></script>
 <script src="js/app.js"></script>
 <script type="module">
-const gl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
-const classic = () => new Promise(r => { const s = document.createElement('script'); s.src = 'js/placa.js'; s.onload = s.onerror = r; document.head.appendChild(s); });
-try { if (!gl) throw 0; await import('./js/placa3d.js'); } catch (e) { await classic(); }
+// Por omissão a placa é SVG: leve e fluida em qualquer aparelho. A versão 3D só carrega se a escolheres (botão «3D»).
+const want3d = (() => { try { return localStorage.getItem('eia.3d') === '1'; } catch (e) { return false; } })();
+const gl = want3d && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+if (gl) { try { await import('./js/placa3d.js'); } catch (e) { window.Placa = window.PlacaSVG; } } else window.Placa = window.PlacaSVG;
 window.dispatchEvent(new Event('placa-ready'));
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>

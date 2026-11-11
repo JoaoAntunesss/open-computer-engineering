@@ -38,7 +38,7 @@ const T = {
     diff: 'Dificuldade', diffN: ['', 'Muito fácil', 'Fácil', 'Média', 'Difícil', 'Muito difícil'], allStatus: 'Qualquer estado', todo: 'Por começar', doing: 'Em curso', done: 'Concluídas',
     shown: n => `${n} cadeira${n === 1 ? '' : 's'}`, of: 'de', none: 'Nenhuma cadeira corresponde a estes filtros.', clear: 'Limpar filtros',
     unisN: n => `${n} universidades`, topics: 'O que vais aprender', topicsP: 'Pela ordem recomendada. Abre cada tópico para a lição e marca o que já dominas.',
-    tasks: 'Tarefas práticas', tasksP: 'Aprende-se a fazer. Marca as que já fizeste.', tools: 'Programas e linguagens', toolsP: 'O que as universidades usam nesta cadeira.',
+    tasks: 'Tarefas práticas', tasksP: 'Aprende-se a fazer. Marca as que já fizeste.', tools: 'Programas e linguagens', toolsP: 'O que as universidades usam nesta cadeira. Toca num nome para ires à página oficial onde o descarregas.',
     res: 'Livros e cursos gratuitos', resP: 'Recursos abertos e legais, publicados pelos autores e pelas universidades.', kind: { b: 'Livro', c: 'Curso', p: 'Prática', d: 'Documentação' },
     unis: 'Nas universidades', unisP: 'A cadeira equivalente em cada universidade. Clica no nome para ver o plano de estudos.', noEq: 'Sem cadeira obrigatória equivalente',
     pinIn: 'Precisas antes', pinOut: 'Abre caminho para', noIn: 'Nada: podes começar já', noOut: 'Fim deste ramo',
@@ -72,7 +72,7 @@ const T = {
     diff: 'Difficulty', diffN: ['', 'Very easy', 'Easy', 'Medium', 'Hard', 'Very hard'], allStatus: 'Any status', todo: 'Not started', doing: 'In progress', done: 'Completed',
     shown: n => `${n} course${n === 1 ? '' : 's'}`, of: 'of', none: 'No course matches these filters.', clear: 'Clear filters',
     unisN: n => `${n} universities`, topics: 'What you will learn', topicsP: 'In the recommended order. Open each topic for its lesson and tick what you know.',
-    tasks: 'Hands-on tasks', tasksP: 'You learn by doing. Tick the ones you have done.', tools: 'Tools and languages', toolsP: 'What universities use in this course.',
+    tasks: 'Hands-on tasks', tasksP: 'You learn by doing. Tick the ones you have done.', tools: 'Tools and languages', toolsP: 'What universities use in this course. Tap a name to go to the official page to download it.',
     res: 'Free books and courses', resP: 'Open, legal resources published by their authors and universities.', kind: { b: 'Book', c: 'Course', p: 'Practice', d: 'Docs' },
     unis: 'At the universities', unisP: 'The equivalent course at each university. Click a name to see its curriculum.', noEq: 'No equivalent required course',
     pinIn: 'You need first', pinOut: 'Leads to', noIn: 'Nothing: start now', noOut: 'End of this branch',
@@ -335,7 +335,7 @@ function viewCourse(id) {
     <section class="panel"><div class="panel-h"><h2>${t('tasks')}</h2><span class="tally" id="tl-k">${p.k.length}/${c.tasks.length}</span></div><p>${t('tasksP')}</p>${checkList(c, c.tasks, 'k')}</section>
     <section class="panel"><div class="panel-h"><h2>${t('res')}</h2></div><p>${t('resP')}</p>${resList(c)}</section>
   </div><div>
-    <section class="panel"><div class="panel-h"><h2>${t('tools')}</h2></div><p>${t('toolsP')}</p><div class="tools">${c.tools.map(x => `<span class="tool">${esc(x)}</span>`).join('')}</div></section>
+    <section class="panel"><div class="panel-h"><h2>${t('tools')}</h2></div><p>${t('toolsP')}</p><div class="tools">${c.tools.map(x => window.toolHTML ? window.toolHTML(x) : `<span class="tool">${esc(x)}</span>`).join('')}</div></section>
     <section class="panel"><div class="panel-h"><h2>${t('unis')}</h2></div><p>${t('unisP')}</p>${uniTable(c)}</section>
   </div></div>
   <nav class="steps" aria-label="${t('prev')} / ${t('nextC')}">${prev ? `<a href="#/c/${prev.id}"><small>${t('prev')}</small><b>${esc(nm(prev))}</b></a>` : ''}${next ? `<a class="next" href="#/c/${next.id}"><small>${t('nextC')}</small><b>${esc(nm(next))}</b></a>` : ''}</nav>`;
@@ -438,7 +438,7 @@ function inspectorHTML(id) {
   <p class="mut">${esc(desc(c))}</p><a class="btn-link" href="#/c/${id}">${t('openCourse')}</a>
   <div class="insp-sec"><div class="panel-h"><h3>${t('topics')}</h3><span class="tally" id="it-t">${p.t.length}/${c.topics.length}</span></div>${checkList(c, c.topics, 't', true)}</div>
   <div class="insp-sec"><div class="panel-h"><h3>${t('tasks')}</h3><span class="tally" id="it-k">${p.k.length}/${c.tasks.length}</span></div>${checkList(c, c.tasks, 'k')}</div>
-  <div class="insp-sec"><h3>${t('tools')}</h3><div class="tools">${c.tools.map(x => `<span class="tool">${esc(x)}</span>`).join('')}</div></div>
+  <div class="insp-sec"><h3>${t('tools')}</h3><div class="tools">${c.tools.map(x => window.toolHTML ? window.toolHTML(x) : `<span class="tool">${esc(x)}</span>`).join('')}</div></div>
   <div class="insp-sec"><h3>${t('res')}</h3>${resList(c)}</div>
   <div class="insp-sec"><h3>${t('pinIn')}</h3><div class="tools">${c.pre.map(x => `<a class="tool" href="#/mapa/${x}">${esc(nm(BY[x]))}</a>`).join('') || `<span class="mut">${t('noIn')}</span>`}</div>
   <h3 style="margin-top:14px">${t('pinOut')}</h3><div class="tools">${(DEPS[id] || []).map(x => `<a class="tool" href="#/mapa/${x}">${esc(nm(BY[x]))}</a>`).join('') || `<span class="mut">${t('noOut')}</span>`}</div></div>`;
@@ -470,9 +470,9 @@ function viewNet(id) {
   return `<section class="net-hero"><h1>${t('netT')}</h1><p class="lead">${t('netP')}</p></section>
   <div class="netgrid"><section class="net" aria-label="${esc(t('netT'))}">
     <div class="net-stage" id="netStage"></div>
-    <div class="net-ui"><button type="button" class="net-btn" id="zIn" aria-label="${t('zin')}">+</button><button type="button" class="net-btn" id="zOut" aria-label="${t('zout')}">−</button><button type="button" class="net-btn wide" id="zFit">${t('zfit')}</button></div>
+    <div class="net-ui"><button type="button" class="net-btn" id="zIn" aria-label="${t('zin')}">+</button><button type="button" class="net-btn" id="zOut" aria-label="${t('zout')}">−</button><button type="button" class="net-btn wide" id="zFit">${t('zfit')}</button><button type="button" class="net-btn wide mode" id="z3d" title="${L === 'pt' ? 'A versão 3D é mais bonita mas mais pesada' : 'The 3D version looks nicer but is heavier'}">${window.Placa && window.Placa.gl ? (L === 'pt' ? 'Versão leve' : 'Light version') : '3D'}</button></div>
     <div class="net-legend"><span><i class="dot hot"></i>${t('legHot')}</span><span><i class="dot cold"></i>${t('legCold')}</span><span><i class="ln syn"></i>${t('legSyn')}</span><span><i class="dot den"></i>${t('legDen')}</span></div>
-    <p class="net-hint">${t('netHint')}</p>
+    <p class="net-hint">${window.Placa && window.Placa.gl ? t('netHint') : (L === 'pt' ? 'Arrasta para mover a placa, usa a roda ou dois dedos para aproximar e toca num chip para o abrir.' : 'Drag to move the board, scroll or pinch to zoom, and tap a chip to open it.')}</p>
   </section>
   <aside class="inspector net-insp" id="insp" aria-live="polite">${pickId ? inspectorHTML(pickId) : `<div class="insp-empty">${t('pickNet')}</div>`}</aside></div>`;
 }
@@ -488,6 +488,8 @@ function bindNet() {
     picked: pickId, reduced: REDUCED.matches, label: t('netT'),
     onPick: (id, topic) => { history.replaceState(null, '', id ? '#/rede/' + id : '#/rede'); showNetInsp(id, topic); if (id && window.innerWidth < 1000) $('#insp').scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' }); }
   });
+  $('#z3d').textContent = window.Placa && window.Placa.gl ? (L === 'pt' ? 'Versão leve' : 'Light version') : '3D';
+  $('#z3d').onclick = () => { try { localStorage.setItem('eia.3d', window.Placa && window.Placa.gl ? '0' : '1'); } catch (e) { } location.reload(); };
   $('#zIn').onclick = () => NET.zoomIn(); $('#zOut').onclick = () => NET.zoomOut(); $('#zFit').onclick = () => NET.reset(); });
   bindInspector();
 }

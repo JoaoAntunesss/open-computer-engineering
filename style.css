@@ -535,3 +535,45 @@ html, body { overflow-x: clip; }
 .run-hint { font-size: 13px; color: var(--ink3); }
 .prose pre.run-out { margin: 10px 0 0; padding: 14px 18px; background: var(--deep2, #0b1020); font: 500 14px/1.6 var(--mono); color: #c9f7d4; white-space: pre-wrap; border-radius: 2px; border-left: 3px solid #34d399; }
 .prose pre.run-out.err { color: #ffc9c9; border-left-color: #f87171; }
+
+/* ---------- placa em SVG (versão leve, a predefinida) ---------- */
+.placa-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; outline: none; }
+.placa-svg.grabbing { cursor: grabbing; }
+.placa-svg.ambient { pointer-events: none; transform-origin: 60% 50%; animation: pdrift 48s ease-in-out infinite alternate; will-change: transform; }
+.placa-svg.still { animation: none; }
+@keyframes pdrift { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.1) translate(-2.5%, -1.5%); } }
+.placa-svg .pboard { fill: #070d1f; stroke: rgba(90, 140, 255, .18); stroke-width: 2; }
+.placa-svg .pg { stroke: rgba(90, 140, 255, .07); stroke-width: 1; }
+.placa-svg .psem { fill: var(--ink3); font: 600 13px/1 system-ui, sans-serif; letter-spacing: .02em; }
+.placa-svg .ptr { fill: none; stroke: rgba(58, 150, 255, .38); stroke-width: 2.2; stroke-linejoin: round; transition: opacity .2s, stroke .2s; }
+.placa-svg .ptr.warm { stroke: rgba(255, 170, 110, .55); }
+.placa-svg .ptr.hot { stroke: var(--fire); stroke-width: 2.6; }
+.placa-svg .ptr.on { stroke-width: 3.4; opacity: 1; }
+.placa-svg .ptr.dim, .placa-svg .pchip.dim { opacity: .28; }
+.placa-svg .ppulse { fill: none; stroke: #ffd2a8; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 10 260; animation: ppulse 3s linear infinite; pointer-events: none; }
+@keyframes ppulse { to { stroke-dashoffset: -270; } }
+.placa-svg .ppins { stroke: rgba(160, 185, 230, .55); stroke-width: 3; }
+.placa-svg .pbody { fill: #111a33; stroke: rgba(58, 150, 255, .55); stroke-width: 1.6; transition: stroke .15s, fill .15s; }
+.placa-svg .pname { fill: var(--ink); font: 650 14px/1 system-ui, sans-serif; pointer-events: none; }
+.placa-svg .ppct { fill: var(--ink2); font: 600 12px/1 ui-monospace, monospace; pointer-events: none; }
+.placa-svg .pdot { fill: rgba(58, 150, 255, .28); }
+.placa-svg .pdot.done { fill: var(--fire); }
+.placa-svg .pchip { cursor: pointer; transition: opacity .2s; }
+.placa-svg .pchip.warm .pbody { stroke: rgba(255, 170, 110, .8); }
+.placa-svg .pchip.hot .pbody { fill: #2a1608; stroke: var(--fire); }
+.placa-svg .pchip.hot .ppins { stroke: rgba(255, 150, 80, .8); }
+.placa-svg .pchip.hot .ppct { fill: var(--fire); }
+.placa-svg .pchip:hover .pbody, .placa-svg .pchip:focus-visible .pbody { stroke: #fff; stroke-width: 2.2; }
+.placa-svg .pchip.sel .pbody { stroke: #fff; stroke-width: 3; }
+.placa-svg .pchip:focus { outline: none; }
+.placa-svg .pdot:hover { fill: #fff; }
+.placa-svg.ambient .pname, .placa-svg.ambient .ppct { opacity: .75; }
+@media (prefers-reduced-motion: reduce) { .placa-svg.ambient, .placa-svg .ppulse { animation: none; } }
+.net-btn.mode { font-weight: 700; }
+/* programas com ligação para a página oficial */
+a.tool { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border: 1px solid transparent; transition: border-color .15s, color .15s; }
+a.tool:hover, a.tool:focus-visible { border-color: var(--cold); color: #fff; }
+.tool-ext { font-size: 12px; color: var(--cold); }
+.tool-grp { display: inline-flex; flex-wrap: wrap; gap: 2px; }
+.tool-grp > .tool { border-radius: 0; }
+.tool-grp > .tool:first-child { border-radius: 2px 0 0 2px; } .tool-grp > .tool:last-child { border-radius: 0 2px 2px 0; }
