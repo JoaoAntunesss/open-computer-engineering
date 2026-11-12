@@ -14,7 +14,7 @@ Cada cadeira junta o que ensinam o **IST, FEUP, UMinho, Universidade Aberta, MIT
 - **O curso como uma placa de circuito em 3D.** Cada cadeira é um chip que se ergue da placa, os tópicos são os componentes à volta dele e os pré-requisitos são as pistas de cobre. O que já dominas acende cor de fogo e envia impulsos pelas pistas. Dá para rodar, aproximar, deslizar e abrir qualquer chip. É feita em WebGL com Three.js, abre com uma sequência cinematográfica na página inicial e tem versões alternativas: uma placa em Canvas 2D para browsers sem WebGL e uma versão estática para quem reduz o movimento.
 - **Lições completas.** Explicação, exemplos de código, erros comuns e exercícios com a solução escondida até a abrires. Já escritas: *Ferramentas do Programador* (terminal, shell, editores, Git, GitHub, SSH, depuração, Markdown e LaTeX), *Introdução à Programação* (de variáveis a recursão, tipos abstratos, testes e complexidade), *Lógica* (de tabelas de verdade a Prolog, SAT e completude) *Cálculo* (limites, derivadas, integrais, séries de Taylor, várias variáveis, descida do gradiente e equações diferenciais), *Álgebra Linear* (de vetores e eliminação de Gauss a valores próprios, mínimos quadrados e SVD) e *Ética e Profissão* (códigos de ética, RGPD, licenças, enviesamento, acessibilidade e comunicação técnica). O 1.º semestre do 1.º ano está completo; do 2.º semestre já há *Programação Imperativa em C* (compilação, apontadores, memória dinâmica, listas ligadas, tabelas de dispersão, ficheiros, gdb e Valgrind).
 - **Ler, prever, corrigir e escrever código em todas as cadeiras.** Cada cadeira acaba com uma lição prática: ler um programa e prever o resultado, encontrar o erro e escrever a tua versão. *Introdução à Programação* ensina a ler código com tabelas de rastreio e a escrever em passos pequenos, *Ferramentas do Programador* ensina a depurar, e cada cadeira de linguagem (C, Java, Haskell, Prolog, SQL, JavaScript, Assembly) tem uma lição para aprender a ler essa linguagem. Os exemplos em Python e JavaScript correm no próprio browser: prevês o resultado, mudas o código e carregas em *Correr*.
-- **Exercícios com correção automática.** Em *Introdução à Programação* há exercícios onde escreves o código no próprio site e carregas em *Testar*: o código corre contra vários testes e vês logo quais passam, com os erros do Python explicados em português. Alguns exercícios não deixam usar atalhos (como `max` ou ciclos num exercício de recursão) e outros usam listas grandes, para uma solução lenta demais não passar. Há dica, e a solução só aparece depois de 3 tentativas.
+- **Exercícios com correção automática.** Em *Introdução à Programação*, *Algoritmos e Estruturas de Dados* e *Algoritmos* há exercícios onde escreves o código no próprio site e carregas em *Testar*: o código corre contra vários testes e vês logo quais passam, com os erros do Python explicados em português. Alguns exercícios não deixam usar atalhos (como `max` ou ciclos num exercício de recursão) e outros usam listas grandes, para uma solução lenta demais não passar. Há dica, e a solução só aparece depois de 3 tentativas. Cada cadeira mostra quantos exercícios resolveste, e resolver todos os de uma lição marca-a como aprendida.
 - **Conta opcional.** Tudo funciona sem conta. Com a conta Google, o progresso, o plano e o código dos exercícios ficam guardados e aparecem em qualquer aparelho. A página *Privacidade* explica o que é guardado e permite apagar a conta e os dados.
 - **Depois do curso: Júnior e Sénior.** Trabalhar em equipa, testes e CI, backend com FastAPI, PostgreSQL, Docker e deploy gratuito; arquitetura, produção e fiabilidade, segurança e liderança técnica.
 - **42 cadeiras**, do zero ao nível sénior.
@@ -68,9 +68,16 @@ Dentro de uma lição, um bloco ` ```exercicio ` define um exercício:
         ...
     ```
 
-Cada linha de `testes` é uma expressão Python. Quando é uma comparação `chamada == esperado`, o site mostra o valor obtido e o esperado.
+Cada linha de `testes` é uma expressão Python. Depois de escrever um exercício, corre `pytest` (ver abaixo). Quando é uma comparação `chamada == esperado`, o site mostra o valor obtido e o esperado.
 
 **Como funciona:** o código corre num *Web Worker* (`js/py-worker.js`) com o Pyodide, por isso a página nunca bloqueia. Se o código demorar mais de 6 segundos (um ciclo infinito, por exemplo), o worker é terminado e criado de novo. O próprio corretor está em Python: analisa o código com `ast` (para os nomes proibidos e para mostrar a chamada de cada teste), executa-o e corre cada teste em separado, para um erro num teste não esconder os outros. A interface e o progresso estão em `js/exercicios.js`. O progresso fica em `localStorage` (`eia.ex`) e, com conta, é sincronizado por `js/sync.js`: um exercício resolvido num aparelho conta como resolvido em todos, e o código mais recente ganha.
+
+## Testes
+
+    pip install pytest
+    pytest
+
+`tests/test_corretor.py` testa o próprio corretor (código certo e errado, erros de sintaxe com a linha, nomes proibidos, `print`, recursão infinita). `tests/test_exercicios.py` corre **todos** os exercícios do site: a solução tem de passar, o código inicial tem de falhar (nos de eficiência, por exceder os 6 segundos, num processo à parte) e os ids têm de ser únicos. O GitHub Actions (`.github/workflows/check.yml`) corre isto em cada push, e confirma também que `js/lessons.js` está atualizado e que o JavaScript não tem erros de sintaxe.
 
 ## Estrutura
 
@@ -84,7 +91,8 @@ Cada linha de `testes` é uma expressão Python. Quando é uma comparação `cha
     js/exercicios.js      exercícios com correção automática (editor, testes, progresso, aviso para criar conta)
     js/py-worker.js       corre o Python dos exercícios num Web Worker, com limite de tempo
     js/sync.js            conta Google opcional: sincroniza progresso, plano e exercícios (Firestore)
-    conteudo/             lições em Markdown
+    conteudo/             lições em Markdown (com os exercícios)
+    tests/                testes do corretor e de todos os exercícios (pytest)
     docs/                 capturas de ecrã deste README
 
 ## Fontes

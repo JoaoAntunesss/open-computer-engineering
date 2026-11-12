@@ -671,3 +671,11 @@ a.tool:hover, a.tool:focus-visible { border-color: var(--cold); color: #fff; }
 @keyframes exUp { from { opacity: 0; transform: translate(-50%, 20px); } }
 @media (prefers-reduced-motion: no-preference) { .ex-nudge { animation: exUp 320ms var(--ease-out); } }
 @media (max-width: 600px) { .ex-keys { display: none; } .prose .ex { padding: 16px 14px; } .ex-code { font-size: 16px; padding: 12px; } .ex-acts button { min-height: 44px; } .ex-acts .ex-test { flex: 1 1 100%; } .ex-in { min-height: 44px; } .ex-nudge { bottom: 12px; } }
+.lesson-side .exn { margin-left: auto; padding-left: 8px; font: 600 12px var(--mono); color: var(--ink3); white-space: nowrap; }
+.lesson-side .exn.done { color: #34d399; }
+.lesson-side li a { grid-template-columns: 18px minmax(0, 1fr) auto; }
+ol.exlist { list-style: none; margin: 12px 0 0; padding: 0; }
+ol.exlist li a { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+ol.exlist li a:hover span { text-decoration: underline; text-decoration-color: var(--cold); }
+ol.exlist li b { font: 600 14px var(--mono); color: var(--ink2); }
+ol.exlist li.ok b { color: #34d399; }

@@ -98,6 +98,32 @@ const totals = () => { let a = 0, b = 0; COURSES.forEach(c => { const p = P[c.id
 const saveP = () => store.set('eia.progress', P);
 function setDone(id, key, j, on) { const p = prog(id); p[key] = on ? [...new Set(p[key].concat(j))] : p[key].filter(x => x !== j); saveP(); if (typeof chrome === 'function') chrome(); }
 
+/* ---------- exercícios com correção automática: quantos há em cada lição e quantos estão resolvidos ---------- */
+let EXIDX = null;
+function exIndex() { // { cadeira: { índice da lição: [ids] } }, lido dos blocos ```exercicio das lições
+  if (EXIDX) return EXIDX; EXIDX = {};
+  for (const [cid, ls] of Object.entries(LESSONS)) for (const [j, v] of Object.entries(ls)) {
+    const txt = (v && (v.pt || v.en)) || '', ids = [...txt.matchAll(/```exercicio\n(?:[^\n]*\n)*?id:\s*(\S+)/g)].map(m => m[1]);
+    if (ids.length) (EXIDX[cid] || (EXIDX[cid] = {}))[+j] = ids;
+  }
+  return EXIDX;
+}
+const exSolved = () => { const s = store.get('eia.ex', {}); return new Set(Object.keys(s).filter(k => s[k] && s[k].ok)); };
+function exCount(cid, j) { // [resolvidos, total] de uma cadeira, ou de uma lição se j for dado
+  const ix = exIndex()[cid] || {}, ok = exSolved(); let a = 0, b = 0;
+  for (const [k, ids] of Object.entries(ix)) if (j == null || +k === j) { b += ids.length; a += ids.filter(x => ok.has(x)).length; }
+  return [a, b];
+}
+function exTotals() { let a = 0, b = 0; for (const cid of Object.keys(exIndex())) { const [x, y] = exCount(cid); a += x; b += y; } return [a, b]; }
+// resolver todos os exercícios de uma lição marca essa lição como aprendida (e acende-a na placa)
+document.addEventListener('eia:ex-solved', e => {
+  const id = e.detail; for (const [cid, ls] of Object.entries(exIndex())) for (const [j, ids] of Object.entries(ls)) {
+    if (!ids.includes(id)) continue; const [a, b] = exCount(cid, +j);
+    if (a === b && !doneTopic(cid, +j)) { setDone(cid, 't', +j, true); const inp = $(`.learned input[data-c="${cid}"][data-i="${j}"]`); if (inp) inp.checked = true; }
+    const side = $(`.lesson-side li:nth-child(${+j + 1}) .exn`); if (side) { side.textContent = `${a}/${b}`; side.classList.toggle('done', a === b); }
+  }
+});
+
 /* ---------- guided path ---------- */
 const doneTopic = (id, j) => !!(P[id] && P[id].t.includes(j));
 function courseState(c) {
@@ -236,7 +262,7 @@ function nextPanel() {
 function statsStrip() {
   const [a] = totals(), nT = COURSES.reduce((x, c) => x + (P[c.id] ? P[c.id].t.length : 0), 0), allT = COURSES.reduce((x, c) => x + c.topics.length, 0);
   const doneC = COURSES.filter(c => pct(c) === 100).length, ns = nextStep();
-  return `<section class="stats rise" aria-label="${t('statT')}"><div><b>${nT}<small>/${allT}</small></b><span>${t('statTopics')}</span></div><div><b>${doneC}<small>/${COURSES.length}</small></b><span>${t('statCourses')}</span></div><div><b class="phase">${esc(ns ? semName(ns.c.sem) : '—')}</b><span>${t('statPhase')}</span></div></section>`;
+  return `<section class="stats rise" aria-label="${t('statT')}"><div><b>${nT}<small>/${allT}</small></b><span>${t('statTopics')}</span></div><div><b>${doneC}<small>/${COURSES.length}</small></b><span>${t('statCourses')}</span></div><div><b class="phase">${esc(ns ? semName(ns.c.sem) : '—')}</b><span>${t('statPhase')}</span></div>${(() => { const [ea, eb] = exTotals(); return eb ? `<div><b>${ea}<small>/${eb}</small></b><span>${L === 'pt' ? 'exercícios resolvidos' : 'exercises solved'}</span></div>` : ''; })()}</section>`;
 }
 function howStrip() {
   if (totals()[0] > 0) return '';
@@ -319,12 +345,17 @@ const checkList = (c, arr, key, linkTopics) => { const p = prog(c.id); return `<
 const resList = c => `<ul class="res">${c.res.map(r => `<li><span class="kind" style="--k:${KC[r[3]]}">${t('kind')[r[3]]}</span><div><a href="${esc(r[2])}" target="_blank" rel="noopener">${esc(r[0])}</a><small>${esc(r[1])}</small></div></li>`).join('')}</ul>`;
 const codeSplit = v => { const m = /^((?:CS|Math|Stat|AM|Stat)\s?\d+[A-Za-z]?|\d{1,2}\.\d{3,4}[A-Z]?(?:\s?\/\s?[\d.]+)?|\d{2}-\d{3}(?:\/\d{2}-\d{3})?)\s+(.*)$/.exec(v); return m ? `<code>${esc(m[1])}</code>${esc(m[2])}` : esc(v); };
 const uniTable = c => `<table class="unis">${UNIS.map(u => { const v = c.unis[u.id]; return `<tr><th scope="row"><a href="${esc(u.src)}" target="_blank" rel="noopener" title="${esc(u.full)}">${esc(u.n)}</a></th>${v ? `<td>${v.split('; ').map(codeSplit).join('<br>')}</td>` : `<td class="none">${t('noEq')}</td>`}</tr>`; }).join('')}</table>`;
+function exPanel(c) {
+  const ix = exIndex()[c.id]; if (!ix) return ''; const [a, b] = exCount(c.id), pt = L === 'pt';
+  const rows = Object.keys(ix).map(Number).sort((x, y) => x - y).map(j => { const [x, y] = exCount(c.id, j); return `<li class="${x === y ? 'ok' : ''}"><a href="#/l/${c.id}/${j + 1}"><span>${esc(half(c.topics[j]))}</span><b>${x}/${y}</b></a></li>`; }).join('');
+  return `<section class="panel"><div class="panel-h"><h2>${pt ? 'Exercícios com correção automática' : 'Auto-checked exercises'}</h2><span class="tally">${a}/${b}</span></div><p>${pt ? 'Escreves o código no site e ele é testado na hora. Resolver todos os exercícios de uma lição marca-a como aprendida.' : 'You write the code on the site and it is tested right away. Solving every exercise in a lesson marks it as learned.'}</p><ol class="exlist">${rows}</ol></section>`;
+}
 function viewCourse(id) {
   const c = BY[id]; if (!c) return `<div class="empty" style="margin-top:40px">${t('notFound')} <a href="#/">${t('back')}</a></div>`;
   const i = ORDER.indexOf(id), prev = BY[ORDER[i - 1]], next = BY[ORDER[i + 1]], p = prog(c.id), cp = pct(c);
   return `<div class="crumbs"><a href="#/">${t('home')}</a> / ${esc(semName(c.sem))}</div>
   <header class="c-hero"><span class="sw" style="background:${areaC(c)}"></span><div><h1>${esc(nm(c))}</h1><p class="lead">${esc(desc(c))}</p>
-    <ul class="facts"><li>${t('sem')}<b>${esc(semName(c.sem))}</b></li><li>${t('area')}<b><i style="width:14px;height:4px;border-radius:1px;background:${areaC(c)}"></i>${esc(AREAS[c.area][L])}</b></li><li>${t('diff')}<b>${sig(c.diff)} ${t('diffN')[c.diff]}</b></li><li>${t('progress')}<b id="cpct">${cp}% ${t('done2')}</b></li></ul></div></header>
+    <ul class="facts"><li>${t('sem')}<b>${esc(semName(c.sem))}</b></li><li>${t('area')}<b><i style="width:14px;height:4px;border-radius:1px;background:${areaC(c)}"></i>${esc(AREAS[c.area][L])}</b></li><li>${t('diff')}<b>${sig(c.diff)} ${t('diffN')[c.diff]}</b></li>${exCount(c.id)[1] ? `<li>${L === 'pt' ? 'Exercícios' : 'Exercises'}<b>${exCount(c.id)[0]}/${exCount(c.id)[1]}</b></li>` : ''}<li>${t('progress')}<b id="cpct">${cp}% ${t('done2')}</b></li></ul></div></header>
   <section class="pinout" aria-label="${t('pinIn')} / ${t('pinOut')}">
     <div class="pins in"><h3>${t('pinIn')}</h3>${pinList(c.pre, t('noIn'))}</div>
     <div class="die tilt"><div class="die-legs" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div><b>${esc(nm(c))}</b><small>${t('items')(p.t.length + p.k.length, c.topics.length + c.tasks.length)}</small>${charge(cp)}</div></div>
@@ -332,6 +363,7 @@ function viewCourse(id) {
   </section>
   <div class="cols"><div>
     <section class="panel"><div class="panel-h"><h2>${t('topics')}</h2><span class="tally" id="tl-t">${p.t.length}/${c.topics.length}</span></div><p>${t('topicsP')}</p>${checkList(c, c.topics, 't', true)}</section>
+    ${exPanel(c)}
     <section class="panel"><div class="panel-h"><h2>${t('tasks')}</h2><span class="tally" id="tl-k">${p.k.length}/${c.tasks.length}</span></div><p>${t('tasksP')}</p>${checkList(c, c.tasks, 'k')}</section>
     <section class="panel"><div class="panel-h"><h2>${t('res')}</h2></div><p>${t('resP')}</p>${resList(c)}</section>
   </div><div>
@@ -381,7 +413,7 @@ function parseEx(lines) {
 function viewLesson(id, n) {
   const c = BY[id], j = n - 1; if (!c || !c.topics[j]) return viewCourse(id);
   const body = lessonOf(id, j), p = prog(id), last = j === c.topics.length - 1, nextHref = last ? `#/c/${id}` : `#/l/${id}/${j + 2}`;
-  const side = c.topics.map((s, i) => `<li class="${i === j ? 'cur' : ''} ${p.t.includes(i) ? 'ok' : ''}"><a href="#/l/${id}/${i + 1}"${i === j ? ' aria-current="page"' : ''}>${glyph(p.t.includes(i) ? 'done' : i === j ? 'doing' : 'todo')}<span>${esc(half(s))}</span></a></li>`).join('');
+  const side = c.topics.map((s, i) => `<li class="${i === j ? 'cur' : ''} ${p.t.includes(i) ? 'ok' : ''}"><a href="#/l/${id}/${i + 1}"${i === j ? ' aria-current="page"' : ''}>${glyph(p.t.includes(i) ? 'done' : i === j ? 'doing' : 'todo')}<span>${esc(half(s))}</span>${exCount(id, i)[1] ? `<small class="exn${exCount(id, i)[0] === exCount(id, i)[1] ? ' done' : ''}" title="${L === 'pt' ? 'exercícios resolvidos' : 'exercises solved'}">${exCount(id, i)[0]}/${exCount(id, i)[1]}</small>` : ''}</a></li>`).join('');
   const mins = readMin(id, j);
   return `<div class="readbar" aria-hidden="true"><i id="readbar"></i></div>
   <div class="lesson-grid"><aside class="lesson-side" aria-label="${t('lessonsIn')}"><p class="side-course"><a href="#/c/${id}">${esc(nm(c))}</a></p><h2>${t('lessonsIn')}</h2><ol>${side}</ol><a class="textlink" href="#/c/${id}">${t('tasksLink')}</a></aside>

@@ -113,7 +113,7 @@ async function run(box) {
   const st = S[ex.id] || (S[ex.id] = {}); const was = !!st.ok;
   st.n = (st.n || 0) + 1; st.code = code; st.at = Date.now(); if (r.ok) st.ok = true; save();
   result(box, r); paintState(box);
-  if (r.ok && !was) { box.classList.add('just'); setTimeout(() => box.classList.remove('just'), 1200); nudge(); }
+  if (r.ok && !was) { document.dispatchEvent(new CustomEvent('eia:ex-solved', { detail: ex.id })); box.classList.add('just'); setTimeout(() => box.classList.remove('just'), 1200); nudge(); }
 }
 // o aviso para criar conta: depois do 1.º exercício resolvido e de 3 em 3, se ainda não entrou
 function nudge() {
@@ -155,6 +155,7 @@ function bind(root) {
     if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { io.disconnect(); worker().catch(() => { }); } }); io.observe(box); }
   });
 }
+addEventListener('hashchange', () => { const n = $('#exNudge'); if (n) n.remove(); });
 new MutationObserver(() => $$('.ex[data-id]').forEach(paintState)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-signed'] });
 window.EX = { bind, solved: () => Object.values(S).filter(x => x.ok).length };
 })();
