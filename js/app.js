@@ -356,7 +356,7 @@ function md(src) { // small, safe Markdown subset: headings, paragraphs, lists, 
   while (i < lines.length) {
     const l = lines[i];
     let m;
-    if ((m = /^(`{3,})(.*)$/.exec(l))) { const fence = m[1], lang = m[2].trim(); const buf = []; i++; while (i < lines.length && lines[i].trim() !== fence) buf.push(lines[i++]); i++; const run = /\s+run$/.test(lang), lg = lang.replace(/\s+run$/, ''); out.push(run ? `<div class="runbox" data-run="${esc(lg)}"><pre class="code" data-lang="${esc(lg)}"><code contenteditable="true" spellcheck="false" aria-label="${t('runEdit')}">${esc(buf.join('\n'))}</code></pre><div class="run-bar"><button type="button" class="run-btn">${t('run')}</button><button type="button" class="run-reset">${t('runReset')}</button><span class="run-hint">${t('runHint')}</span></div><pre class="run-out" hidden></pre></div>` : `<pre class="code"${lang ? ` data-lang="${esc(lang)}"` : ''}><code>${esc(buf.join('\n'))}</code></pre>`); continue; }
+    if ((m = /^(`{3,})(.*)$/.exec(l))) { const fence = m[1], lang = m[2].trim(); const buf = []; i++; while (i < lines.length && lines[i].trim() !== fence) buf.push(lines[i++]); i++; if (lang === 'exercicio' || lang === 'exercise') { const ex = parseEx(buf); if (ex) out.push(`<section class="ex" data-ex="${esc(JSON.stringify(ex))}"></section>`); continue; } const run = /\s+run$/.test(lang), lg = lang.replace(/\s+run$/, ''); out.push(run ? `<div class="runbox" data-run="${esc(lg)}"><pre class="code" data-lang="${esc(lg)}"><code contenteditable="true" spellcheck="false" aria-label="${t('runEdit')}">${esc(buf.join('\n'))}</code></pre><div class="run-bar"><button type="button" class="run-btn">${t('run')}</button><button type="button" class="run-reset">${t('runReset')}</button><span class="run-hint">${t('runHint')}</span></div><pre class="run-out" hidden></pre></div>` : `<pre class="code"${lang ? ` data-lang="${esc(lang)}"` : ''}><code>${esc(buf.join('\n'))}</code></pre>`); continue; }
     if ((m = /^\?\?\?\s*(.*)$/.exec(l)) && m[1]) { const buf = []; i++; while (i < lines.length && lines[i].trim() !== '???') buf.push(lines[i++]); i++; out.push(`<details class="sol"><summary>${inline(m[1])}</summary><div>${md(buf.join('\n'))}</div></details>`); continue; }
     if (/^\|.*\|\s*$/.test(l) && /^\|?\s*:?-{3,}/.test(lines[i + 1] || '')) { const head = cells(l); i += 2; const body = []; while (i < lines.length && /^\|.*\|\s*$/.test(lines[i])) body.push(cells(lines[i++])); out.push(`<div class="tbl"><table><thead><tr>${head.map(h => `<th>${inline(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`); continue; }
     if ((m = /^(#{2,4})\s+(.*)/.exec(l))) { const n = m[1].length; out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue; }
@@ -367,6 +367,16 @@ function md(src) { // small, safe Markdown subset: headings, paragraphs, lists, 
     const buf = []; while (i < lines.length && lines[i].trim() && !/^(```|#{2,4}\s|\s*[-*]\s|\s*\d+\.\s|>|\?\?\?|\|.*\|\s*$)/.test(lines[i])) buf.push(lines[i++]); out.push(`<p>${inline(buf.join(' '))}</p>`);
   }
   return out.join('');
+}
+/* Exercício com correção automática (bloco ```exercicio): chaves de uma linha (id, titulo, enunciado, dica, proibido)
+   e blocos de várias linhas (inicio, testes, solucao), cada um até à chave seguinte. Ver js/exercicios.js. */
+function parseEx(lines) {
+  const K = /^(id|titulo|enunciado|dica|proibido|inicio|testes|solucao):\s?(.*)$/, ex = {}; let cur = null;
+  for (const l of lines) { const m = K.exec(l); if (m) { cur = m[1]; ex[cur] = m[2] ? [m[2]] : []; } else if (cur) ex[cur].push(l); }
+  const one = k => (ex[k] || []).join(' ').trim(), block = k => (ex[k] || []).join('\n').replace(/^\n+|\s+$/g, '');
+  if (!one('id') || !ex.testes) return null;
+  return { id: one('id'), titulo: one('titulo'), enunciado: one('enunciado'), dica: one('dica'), proibido: one('proibido').split(/[,\s]+/).filter(Boolean),
+    inicio: block('inicio') + '\n', testes: (ex.testes || []).map(x => x.trim()).filter(Boolean), solucao: block('solucao') };
 }
 function viewLesson(id, n) {
   const c = BY[id], j = n - 1; if (!c || !c.topics[j]) return viewCourse(id);
@@ -658,7 +668,32 @@ function chrome() {
   $('#navHome').textContent = t('home'); $('#navNet').textContent = t('net'); $('#navCat').textContent = t('cat'); $('#navPlan').textContent = L === 'pt' ? 'Plano' : 'Plan'; $('#navAbout').textContent = t('about');
   const ns = nextStep(), cb = $('#contBtn'); cb.href = ns ? ns.href : '#/'; cb.textContent = totals()[0] === 0 ? t('start') : t('cont');
   $('#langBtn').textContent = L === 'pt' ? 'EN' : 'PT';
-  $('#foot').innerHTML = `<p class="close">${esc(t('closeT'))}</p><p>${esc(t('foot'))}</p>`;
+  $('#foot').innerHTML = `<p class="close">${esc(t('closeT'))}</p><p>${esc(t('foot'))} <a href="#/privacidade">${L === 'pt' ? 'Privacidade' : 'Privacy'}</a></p>`;
+}
+/* ---------- privacidade (RGPD) ---------- */
+function viewPrivacy() {
+  const P2 = L === 'pt' ? {
+    h: 'Privacidade', intro: 'O curso funciona sem conta. A conta Google é opcional e serve só para guardar o teu percurso e o levares para outros aparelhos.',
+    items: [['O que fica guardado', 'Sem conta: o teu progresso, o plano de estudo e o código dos exercícios ficam só neste browser (localStorage). Com conta: os mesmos dados ficam também na tua conta, numa base de dados Firebase (Google Cloud, na Europa), associados ao identificador da tua conta Google.'],
+      ['O que não guardamos', 'Não há publicidade nem rastreadores. Não vendemos nem partilhamos dados. O teu nome, email e fotografia vêm da Google para mostrar o botão da conta e não são guardados na base de dados do curso.'],
+      ['Para que servem', 'Só para mostrar o teu progresso e sincronizá-lo entre aparelhos.'],
+      ['Os teus direitos', 'Podes sair da conta a qualquer momento e apagar a conta e todos os dados guardados na cloud com o botão abaixo. Para apagar o que está neste browser, limpa os dados do site nas definições do browser.'],
+      ['Contacto', 'Para qualquer pedido sobre os teus dados, abre uma issue no repositório do projeto no GitHub.']],
+    del: 'Apagar a minha conta e os meus dados', q: 'Apagar a tua conta e todo o progresso guardado na cloud? Isto não se pode desfazer.' } : {
+    h: 'Privacy', intro: 'The course works without an account. A Google account is optional and only keeps your progress so you can take it to other devices.',
+    items: [['What is stored', 'Without an account: your progress, study plan and exercise code stay only in this browser (localStorage). With an account: the same data is also kept in your account, in a Firebase database (Google Cloud, in Europe), linked to your Google account id.'],
+      ['What we do not store', 'No ads, no trackers. We do not sell or share data. Your name, email and photo come from Google to show the account button and are not stored in the course database.'],
+      ['What it is for', 'Only to show your progress and sync it between devices.'],
+      ['Your rights', 'You can sign out at any time and delete your account and all cloud data with the button below. To delete what is in this browser, clear the site data in your browser settings.'],
+      ['Contact', 'For any request about your data, open an issue in the project repository on GitHub.']],
+    del: 'Delete my account and my data', q: 'Delete your account and all progress stored in the cloud? This cannot be undone.' };
+  return `<article class="lesson rise" style="max-width:760px;margin:40px auto"><header><h1>${P2.h}</h1></header><div class="prose"><p>${P2.intro}</p>${P2.items.map(([a, b]) => `<h3>${a}</h3><p>${b}</p>`).join('')}
+    <p style="margin-top:28px"><button type="button" class="run-reset" id="delAcc" data-q="${esc(P2.q)}">${P2.del}</button></p><p id="delMsg" role="status"></p></div></article>`;
+}
+function bindPrivacy() {
+  const b = $('#delAcc'); if (!b) return;
+  b.onclick = () => { if (!confirm(b.dataset.q)) return; b.disabled = true; document.dispatchEvent(new Event('eia:delete-account')); };
+  document.addEventListener('eia:delete-result', e => { const m = $('#delMsg'); if (m) m.textContent = e.detail; if (b) b.disabled = false; }, { once: true });
 }
 let NET = null;
 const placaReady = fn => { if (window.Placa) fn(); else window.addEventListener('placa-ready', fn, { once: true }); };
@@ -668,11 +703,12 @@ function render() {
   const h = location.hash.replace(/^#\/?/, ''), app = $('#app'), seg = h.split('/');
   let nav = 'home', title = '';
   if (seg[0] === 'c' && seg[1]) { app.innerHTML = viewCourse(seg[1]); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] ? nm(BY[seg[1]]) : ''; }
-  else if (seg[0] === 'l' && seg[1]) { app.innerHTML = viewLesson(seg[1], +seg[2] || 1); bindLesson(); bindRunners(); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] && BY[seg[1]].topics[(+seg[2] || 1) - 1] ? half(BY[seg[1]].topics[(+seg[2] || 1) - 1]) : ''; }
+  else if (seg[0] === 'l' && seg[1]) { app.innerHTML = viewLesson(seg[1], +seg[2] || 1); bindLesson(); bindRunners(); if (window.EX) window.EX.bind(app); bindCourse(seg[1]); nav = ''; title = BY[seg[1]] && BY[seg[1]].topics[(+seg[2] || 1) - 1] ? half(BY[seg[1]].topics[(+seg[2] || 1) - 1]) : ''; }
   else if (seg[0] === 'rede' || seg[0] === 'network') { app.innerHTML = viewNet(seg[1]); bindNet(); nav = 'net'; title = t('netT'); }
   else if (seg[0] === 'cadeiras' || seg[0] === 'courses') { app.innerHTML = viewCatalog(); bindCatalog(); nav = 'cat'; title = t('catT2'); }
   else if (seg[0] === 'mapa' || seg[0] === 'map') { app.innerHTML = viewMap(seg[1]); bindMap(); nav = 'cat'; title = t('mapT'); }
   else if (seg[0] === 'plano' || seg[0] === 'plan') { app.innerHTML = viewPlan(); bindPlan(); nav = 'plan'; title = L === 'pt' ? 'O meu plano' : 'My plan'; }
+  else if (seg[0] === 'privacidade' || seg[0] === 'privacy') { app.innerHTML = viewPrivacy(); bindPrivacy(); nav = ''; title = L === 'pt' ? 'Privacidade' : 'Privacy'; }
   else if (seg[0] === 'sobre' || seg[0] === 'about') { app.innerHTML = viewAbout(); bindAbout(); nav = 'about'; title = t('aboutT'); }
   else { app.innerHTML = viewHome(); bindHome(); }
   document.title = (title ? title + ' — ' : '') + t('brand');

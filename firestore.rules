@@ -5,7 +5,7 @@ service cloud.firestore {
     match /eia_users/{uid} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['progress', 'plan', 'planTs', 'updated']);
+        && request.resource.data.keys().hasOnly(['progress', 'plan', 'planTs', 'ex', 'updated']);
     }
   }
 }
