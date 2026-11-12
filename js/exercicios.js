@@ -76,7 +76,7 @@ const MIN_TRIES = 3;
 function html(ex) {
   return `<header class="ex-h"><p class="ex-k">${tx('k')}</p><h3>${inline(ex.titulo)}</h3><span class="ex-st" hidden>${tx('solved')}</span></header>
   <p class="ex-q">${inline(ex.enunciado)}</p>
-  <div class="ex-ed"><textarea class="ex-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="${esc(ex.titulo)}"></textarea></div>
+  <div class="ex-ed"><textarea class="ex-code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" inputmode="text" aria-label="${esc(ex.titulo)}"></textarea></div>
   <div class="ex-acts"><button type="button" class="run-btn ex-test">${tx('test')}</button>${ex.dica ? `<button type="button" class="run-reset ex-hint-b">${tx('hint')}</button>` : ''}<button type="button" class="run-reset ex-reset">${tx('reset')}</button>${ex.solucao ? `<button type="button" class="run-reset ex-sol-b">${tx('sol')}</button>` : ''}<span class="ex-n"></span><span class="ex-keys">${tx('keys')}</span></div>
   ${ex.dica ? `<p class="ex-hint" hidden>${inline(ex.dica)}</p>` : ''}
   <div class="ex-res" aria-live="polite"></div>
@@ -136,6 +136,10 @@ function bind(root) {
     ta.addEventListener('keydown', e => {
       if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); const a = ta.selectionStart; ta.setRangeText('    ', a, ta.selectionEnd, 'end'); fit(); }
       else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(box); }
+      else if (e.key === 'Backspace' && ta.selectionStart === ta.selectionEnd) { // apagar uma indentação inteira de uma vez
+        const a = ta.selectionStart, before = ta.value.slice(ta.value.lastIndexOf('\n', a - 1) + 1, a);
+        if (before.length >= 4 && /^ +$/.test(before) && before.length % 4 === 0) { e.preventDefault(); ta.setRangeText('', a - 4, a, 'end'); fit(); }
+      }
       else if (e.key === 'Enter') { // mantém a indentação, e acrescenta 4 espaços depois de ":"
         const a = ta.selectionStart, line = ta.value.slice(ta.value.lastIndexOf('\n', a - 1) + 1, a), ind = (/^\s*/.exec(line) || [''])[0] + (/:\s*$/.test(line) ? '    ' : '');
         e.preventDefault(); ta.setRangeText('\n' + ind, a, ta.selectionEnd, 'end'); fit();

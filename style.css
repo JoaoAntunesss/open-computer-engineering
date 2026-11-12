@@ -670,4 +670,4 @@ a.tool:hover, a.tool:focus-visible { border-color: var(--cold); color: #fff; }
 .ex-nudge div { display: flex; gap: 10px; flex-wrap: wrap; }
 @keyframes exUp { from { opacity: 0; transform: translate(-50%, 20px); } }
 @media (prefers-reduced-motion: no-preference) { .ex-nudge { animation: exUp 320ms var(--ease-out); } }
-@media (max-width: 600px) { .ex-keys { display: none; } .prose .ex { padding: 16px 14px; } }
+@media (max-width: 600px) { .ex-keys { display: none; } .prose .ex { padding: 16px 14px; } .ex-code { font-size: 16px; padding: 12px; } .ex-acts button { min-height: 44px; } .ex-acts .ex-test { flex: 1 1 100%; } .ex-in { min-height: 44px; } .ex-nudge { bottom: 12px; } }
